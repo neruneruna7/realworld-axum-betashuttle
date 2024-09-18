@@ -2,6 +2,7 @@ use axum::{routing::get, Router};
 use shuttle_runtime::SecretStore;
 
 mod endpoints;
+pub mod error;
 pub mod extractor;
 
 #[derive(Clone)]

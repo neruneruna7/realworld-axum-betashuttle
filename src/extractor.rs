@@ -7,6 +7,8 @@ use axum::{
 use serde::de::DeserializeOwned;
 use validator::Validate;
 
+use crate::error::ConduitError;
+
 #[derive(Debug, Clone)]
 pub struct ValidationExtractot<T>(pub T);
 
@@ -20,13 +22,12 @@ where
     #[doc = " a kind of error that can be converted into a response."]
     // ひとまず確認のためのRejection型を定義
     // 後でカスタムエラーを定義する
-    type Rejection = (StatusCode, String);
+    type Rejection = ConduitError;
 
     #[doc = " Perform the extraction."]
     async fn from_request(req: Request, state: &S) -> Result<Self, Self::Rejection> {
-        let Json(value) = Json::<T>::from_request(req, state).await.unwrap();
-        // 後でカスタムエラーを定義し，?を使ってエラーを返す
-        value.validate().unwrap();
+        let Json(value) = Json::<T>::from_request(req, state).await?;
+        value.validate()?;
         Ok(ValidationExtractot(value))
     }
 }
