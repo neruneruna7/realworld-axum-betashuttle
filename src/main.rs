@@ -1,7 +1,8 @@
 use axum::{routing::get, Router};
+use endpoints::users::handler::UserRouter;
 use shuttle_runtime::SecretStore;
 
-mod endpoints;
+pub mod endpoints;
 pub mod error;
 pub mod extractor;
 
@@ -14,7 +15,9 @@ async fn hello_world() -> &'static str {
 
 #[shuttle_runtime::main]
 async fn main(#[shuttle_runtime::Secrets] _secrets: SecretStore) -> shuttle_axum::ShuttleAxum {
-    let router = Router::new().route("/", get(hello_world));
+    let router = Router::new()
+        .route("/", get(hello_world))
+        .nest("/api", UserRouter::new_router());
 
     Ok(router.into())
 }
