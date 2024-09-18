@@ -7,5 +7,11 @@ edition = "2021"
 axum = "0.7.4"
 shuttle-axum = { git = "https://github.com/shuttle-hq/shuttle" }
 shuttle-runtime = { git = "https://github.com/shuttle-hq/shuttle" }
+shuttle-shared-db = {git = "https://github.com/shuttle-hq/shuttle", features = ["postgres", "sqlx"]}
 # do the same for all other shuttle crates
+
 tokio = "1.28.2"
+thiserror = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+sqlx = { version = "0.8.2", features = ["runtime-tokio", "postgres"] }
+tracing = "0.1.40"
