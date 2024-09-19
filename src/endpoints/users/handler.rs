@@ -1,11 +1,10 @@
 use axum::{
-    extract::State, http::StatusCode, response::Response, routing::post, Extension, Json, Router,
+    extract::State, http::StatusCode, routing::post, Json, Router,
 };
-use tracing::info;
 
 use crate::{endpoints::users::dto::User, extractor::ValidationExtractot, AppState};
 
-use super::dto::{NewUser, RegisterUserReq};
+use super::dto::RegisterUserReq;
 
 pub struct UserRouter;
 

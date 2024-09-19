@@ -1,5 +1,4 @@
 use axum::{
-    http::{HeaderValue, Method},
     routing::get,
     Router,
 };

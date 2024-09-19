@@ -1,8 +1,6 @@
 use axum::{
     async_trait,
-    extract::{FromRequest, Request},
-    http::StatusCode,
-    BoxError, Error, Json,
+    extract::{FromRequest, Request}, Json,
 };
 use serde::de::DeserializeOwned;
 use validator::Validate;
