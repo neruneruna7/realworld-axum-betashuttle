@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use axum::{
     extract::rejection::JsonRejection,
     http::StatusCode,
@@ -8,8 +10,13 @@ use thiserror::Error;
 use tracing::info;
 use validator::ValidationErrors;
 
+pub type ConduitResult<T> = Result<T, ConduitError>;
+
 #[derive(Debug, Error)]
 pub enum ConduitError {
+    // パスワードのハッシュ化に失敗した場合
+    #[error(transparent)]
+    Argon2Error(#[from] CustomArgon2Error),
     // 現状，下記2つはPOSTでのリクエスト時に発生するエラー
     #[error(transparent)]
     // バリデーション失敗を意味する
@@ -23,6 +30,7 @@ impl IntoResponse for ConduitError {
     fn into_response(self) -> Response {
         info!("Error: {:?}", self);
         let (s, message) = match self {
+            Self::Argon2Error(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()),
             // 構文などは間違っていないが，データの制約に違反している場合
             Self::ValidationErrpr(e) => (StatusCode::UNPROCESSABLE_ENTITY, e.to_string()),
             // 与えられたJsonの構文やデータに不正があることを意味する？
@@ -34,3 +42,14 @@ impl IntoResponse for ConduitError {
         (s, body).into_response()
     }
 }
+
+#[derive(Debug)]
+pub struct CustomArgon2Error(pub argon2::password_hash::Error);
+
+impl Display for CustomArgon2Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Argon2 error: {}", self)
+    }
+}
+
+impl std::error::Error for CustomArgon2Error {}
