@@ -3,3 +3,4 @@
 Secrets*.toml
 .envrc
 .cargo/*
+.env
