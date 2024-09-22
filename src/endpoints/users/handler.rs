@@ -11,7 +11,10 @@ use crate::{
     AppState,
 };
 
-use super::dto::{NewUser, RegisterUserReq};
+use super::{
+    dao::PasswdHashedNewUser,
+    dto::{NewUser, RegisterUserReq},
+};
 
 pub struct UserRouter;
 
@@ -29,18 +32,24 @@ impl UserRouter {
     ) -> ConduitResult<(StatusCode, Json<User>)> {
         let req = req.user;
         let tmp_user = User {
-            email: req.email.unwrap(),
-            username: req.username.unwrap(),
+            email: req.email.clone().unwrap(),
+            username: req.username.clone().unwrap(),
             ..Default::default()
         };
 
-        let hashed_password = hash_password(&req.password.unwrap())?;
+        let hashed_user = hash_password_user(req)?;
         // ここにDBへの登録処理を書く
 
         Ok((StatusCode::OK, Json(tmp_user)))
     }
 }
 
+fn hash_password_user(req: NewUser) -> ConduitResult<PasswdHashedNewUser> {
+    let hashed_pass = hash_password(&req.password.unwrap()).map(|password| {
+        PasswdHashedNewUser::new(req.username.unwrap(), req.email.unwrap(), password)
+    })?;
+    Ok(hashed_pass)
+}
 fn hash_password(password: &str) -> ConduitResult<String> {
     let salt = SaltString::generate(&mut OsRng);
     // OWASPチートシートにより決定

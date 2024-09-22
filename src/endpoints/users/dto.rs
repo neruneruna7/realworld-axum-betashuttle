@@ -8,7 +8,7 @@ pub struct User {
     pub token: String,
     pub username: String,
     pub bio: String,
-    pub imgae: Option<String>,
+    pub image: Option<String>,
 }
 
 #[derive(Debug, Validate, Deserialize)]
