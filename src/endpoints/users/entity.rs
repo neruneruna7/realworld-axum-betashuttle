@@ -1,5 +1,5 @@
 use sqlx::prelude::*;
-use sqlx::types::time::{OffsetDateTime, PrimitiveDateTime};
+use sqlx::types::time::PrimitiveDateTime;
 use uuid::Uuid;
 
 #[derive(FromRow, Debug, Clone, PartialEq)]

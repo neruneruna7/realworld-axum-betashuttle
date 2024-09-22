@@ -1,5 +1,5 @@
 use argon2::{
-    password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
+    password_hash::{rand_core::OsRng, PasswordHasher, SaltString},
     Argon2,
 };
 use axum::{extract::State, http::StatusCode, routing::post, Json, Router};
@@ -43,7 +43,7 @@ impl UserRouter {
             username: user_entity.username,
             bio: user_entity.bio,
             image: Some(user_entity.image),
-            token: token,
+            token,
         };
 
         Ok((StatusCode::OK, Json(user)))
@@ -68,6 +68,6 @@ fn hash_password(password: &str) -> ConduitResult<String> {
     let argon2 = Argon2::default();
     let hash = argon2
         .hash_password(password.as_bytes(), &salt)
-        .map_err(|e| CustomArgon2Error(e))?;
+        .map_err(CustomArgon2Error)?;
     Ok(hash.to_string())
 }

@@ -1,4 +1,3 @@
-use super::dto::{NewUser, User};
 use crate::{endpoints::users::entity::UserEntity, error::ConduitResult};
 use sqlx::Executor;
 use uuid::Uuid;
