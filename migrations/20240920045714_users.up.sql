@@ -1,6 +1,6 @@
 -- Add up migration script here
 CREATE TABLE IF NOT EXISTS users (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY,
     username VARCHAR NOT NULL DEFAULT '',
     email VARCHAR NOT NULL DEFAULT '',
     password VARCHAR NOT NULL DEFAULT '',

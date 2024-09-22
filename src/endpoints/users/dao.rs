@@ -1,6 +1,7 @@
 use super::dto::{NewUser, User};
 use crate::{endpoints::users::entity::UserEntity, error::ConduitResult};
 use sqlx::Executor;
+use uuid::Uuid;
 
 #[derive(Debug, Clone)]
 pub struct PasswdHashedNewUser {
@@ -33,14 +34,17 @@ impl UserDao {
         &self,
         user_hashed_password: PasswdHashedNewUser,
     ) -> ConduitResult<UserEntity> {
-        // let mut conn = self.pool.acquire().await?;
+        // UUIDを生成する
+        let uuid = Uuid::now_v7();
+
         let user = sqlx::query_as!(
             UserEntity,
             r#"
-            INSERT INTO users (username, email, password)
-            VALUES ($1, $2, $3)
+            INSERT INTO users (id, username, email, password)
+            VALUES ($1, $2, $3, $4)
             RETURNING username, email, bio, image, id, created_at, updated_at, password
             "#,
+            uuid,
             user_hashed_password.username,
             user_hashed_password.email,
             user_hashed_password.password

@@ -1,9 +1,10 @@
 use sqlx::prelude::*;
 use sqlx::types::time::{OffsetDateTime, PrimitiveDateTime};
+use uuid::Uuid;
 
 #[derive(FromRow, Debug, Clone, PartialEq)]
 pub struct UserEntity {
-    pub id: i64,
+    pub id: Uuid,
     pub created_at: PrimitiveDateTime,
     pub updated_at: PrimitiveDateTime,
     pub username: String,

@@ -3,7 +3,6 @@ use validator::Validate;
 
 #[derive(Debug, Serialize, Default)]
 pub struct User {
-    pub id: i64,
     pub email: String,
     pub token: String,
     pub username: String,
