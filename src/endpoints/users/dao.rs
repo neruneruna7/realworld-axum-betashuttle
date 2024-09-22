@@ -27,7 +27,11 @@ impl UserDao {
         Self { pool }
     }
 
-    pub async fn create_user(&self, user: NewUser) -> ConduitResult<UserEntity> {
+    /// パスワードをハッシュ化しないまま値を渡さないでください
+    pub async fn create_user(
+        &self,
+        user_hashed_password: PasswdHashedNewUser,
+    ) -> ConduitResult<UserEntity> {
         // let mut conn = self.pool.acquire().await?;
         let user = sqlx::query_as!(
             UserEntity,
@@ -36,9 +40,9 @@ impl UserDao {
             VALUES ($1, $2, $3)
             RETURNING username, email, bio, image, id, created_at, updated_at, password
             "#,
-            user.username,
-            user.email,
-            user.password
+            user_hashed_password.username,
+            user_hashed_password.email,
+            user_hashed_password.password
         )
         .fetch_one(&self.pool)
         .await?;

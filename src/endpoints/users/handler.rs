@@ -12,7 +12,7 @@ use crate::{
 };
 
 use super::{
-    dao::PasswdHashedNewUser,
+    dao::{PasswdHashedNewUser, UserDao},
     dto::{NewUser, RegisterUserReq},
 };
 
@@ -39,6 +39,8 @@ impl UserRouter {
 
         let hashed_user = hash_password_user(req)?;
         // ここにDBへの登録処理を書く
+        let user_dao = UserDao::new(state.pool.clone());
+        let user = user_dao.create_user(hashed_user).await?;
 
         Ok((StatusCode::OK, Json(tmp_user)))
     }
