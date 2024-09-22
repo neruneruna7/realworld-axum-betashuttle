@@ -14,6 +14,9 @@ pub type ConduitResult<T> = Result<T, ConduitError>;
 
 #[derive(Debug, Error)]
 pub enum ConduitError {
+    // DBの操作に失敗した場合
+    #[error(transparent)]
+    SqlxError(#[from] sqlx::Error),
     // パスワードのハッシュ化に失敗した場合
     #[error(transparent)]
     Argon2Error(#[from] CustomArgon2Error),
@@ -30,6 +33,9 @@ impl IntoResponse for ConduitError {
     fn into_response(self) -> Response {
         info!("Error: {:?}", self);
         let (s, message) = match self {
+            // DBの操作に失敗した場合 サーバー側の問題
+            Self::SqlxError(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()),
+            // パスワードのハッシュ化に失敗した場合 サーバー側の問題
             Self::Argon2Error(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()),
             // 構文などは間違っていないが，データの制約に違反している場合
             Self::ValidationErrpr(e) => (StatusCode::UNPROCESSABLE_ENTITY, e.to_string()),
