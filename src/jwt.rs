@@ -21,7 +21,7 @@ impl JwtEncoder {
         Self { user_id }
     }
 
-    pub fn to_token(&self, state: &AppState) -> String {
+    pub(crate) fn to_token(&self, state: &AppState) -> String {
         let now = chrono::Utc::now();
         let exp = now + DEFALT_SESSION_LEN;
         let claims = Claims {
