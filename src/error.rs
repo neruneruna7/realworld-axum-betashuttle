@@ -54,7 +54,7 @@ pub struct CustomArgon2Error(pub argon2::password_hash::Error);
 
 impl Display for CustomArgon2Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Argon2 error: {}", self)
+        write!(f, "Argon2 error: {}", self.0)
     }
 }
 
