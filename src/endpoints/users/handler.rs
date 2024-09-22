@@ -11,7 +11,7 @@ use crate::{
     AppState,
 };
 
-use super::dto::RegisterUserReq;
+use super::dto::{NewUser, RegisterUserReq};
 
 pub struct UserRouter;
 
@@ -35,6 +35,7 @@ impl UserRouter {
         };
 
         let hashed_password = hash_password(&req.password.unwrap())?;
+        // ここにDBへの登録処理を書く
 
         Ok((StatusCode::OK, Json(tmp_user)))
     }
