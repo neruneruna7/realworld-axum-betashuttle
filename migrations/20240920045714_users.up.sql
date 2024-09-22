@@ -1,5 +1,5 @@
 -- Add up migration script here
-CREATE TABLE IF NOT EXISTS users {
+CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     name VARCHAR NOT NULL DEFAULT '',
     email VARCHAR NOT NULL DEFAULT '',
@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS users {
     image VARCHAR NOT NULL DEFAULT '',
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-}
+);
 
 -- updated_atを動作させるためのトリガー
 CREATE OR REPLACE FUNCTION update_timestamp()

@@ -1,4 +1,4 @@
 -- Add down migration script here
-DROP TABLE users;
-DROP FUNCTION update_timestamp;
-DROP TRIGGER update_users_modtime;
+DROP TRIGGER IF EXISTS update_users_modtime ON users;
+DROP FUNCTION IF EXISTS update_timestamp;
+DROP TABLE IF EXISTS users;
