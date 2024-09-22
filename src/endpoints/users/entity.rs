@@ -1,7 +1,7 @@
 use sqlx::prelude::*;
 use sqlx::types::time::{OffsetDateTime, PrimitiveDateTime};
 
-#[derive(FromRow)]
+#[derive(FromRow, Debug, Clone, PartialEq)]
 pub struct UserEntity {
     pub id: i64,
     pub created_at: PrimitiveDateTime,
