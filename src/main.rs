@@ -6,10 +6,12 @@ use sqlx::PgPool;
 pub mod endpoints;
 pub mod error;
 pub mod extractor;
+pub mod jwt;
 
 #[derive(Clone)]
 struct AppState {
     pool: PgPool,
+    jwt_secret: String,
 }
 
 async fn hello_world() -> &'static str {
@@ -21,7 +23,10 @@ async fn main(
     #[shuttle_runtime::Secrets] _secrets: SecretStore,
     #[shuttle_shared_db::Postgres] pool: sqlx::PgPool,
 ) -> shuttle_axum::ShuttleAxum {
-    let state = AppState { pool };
+    let state = AppState {
+        pool,
+        jwt_secret: _secrets.get("JWT_SECRET").unwrap(),
+    };
 
     let router = Router::new()
         .route("/", get(hello_world))

@@ -8,6 +8,7 @@ use crate::{
     endpoints::users::dto::User,
     error::{ConduitResult, CustomArgon2Error},
     extractor::ValidationExtractot,
+    jwt::JwtEncoder,
     AppState,
 };
 
@@ -31,18 +32,21 @@ impl UserRouter {
         ValidationExtractot(req): ValidationExtractot<RegisterUserReq>,
     ) -> ConduitResult<(StatusCode, Json<User>)> {
         let req = req.user;
-        let tmp_user = User {
-            email: req.email.clone().unwrap(),
-            username: req.username.clone().unwrap(),
-            ..Default::default()
-        };
 
         let hashed_user = hash_password_user(req)?;
         // ここにDBへの登録処理を書く
         let user_dao = UserDao::new(state.pool.clone());
-        let user = user_dao.create_user(hashed_user).await?;
+        let user_entity = user_dao.create_user(hashed_user).await?;
+        let token = JwtEncoder::new(user_entity.id).to_token(&state);
+        let user = User {
+            email: user_entity.email,
+            username: user_entity.username,
+            bio: user_entity.bio,
+            image: Some(user_entity.image),
+            token: token,
+        };
 
-        Ok((StatusCode::OK, Json(tmp_user)))
+        Ok((StatusCode::OK, Json(user)))
     }
 }
 
