@@ -7,6 +7,7 @@ use axum::{
 };
 use serde::de::DeserializeOwned;
 use tracing::info;
+use uuid::Uuid;
 use validator::Validate;
 
 use crate::{error::ConduitError, jwt::JwtService, AppState, ArcState};
@@ -35,7 +36,7 @@ where
 }
 
 /// Authorization token headerからJWTを抽出する
-pub struct RequiredAuth(pub String);
+pub struct RequiredAuth(pub Uuid);
 
 #[async_trait]
 impl<S> FromRequest<S> for RequiredAuth
@@ -57,6 +58,6 @@ where
                 ConduitError::InternalServerError
             })?;
         let claim = JwtService::new(state).get_claim_from_token(token_value.to_str().unwrap())?;
-        Ok(RequiredAuth(claim.user_id.to_string()))
+        Ok(RequiredAuth(claim.user_id))
     }
 }

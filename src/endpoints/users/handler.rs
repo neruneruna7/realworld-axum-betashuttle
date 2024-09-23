@@ -75,24 +75,25 @@ impl UserRouter {
         Extension(state): Extension<ArcState>,
         RequiredAuth(user_id): RequiredAuth,
     ) -> ConduitResult<(StatusCode, Json<User>)> {
-        info!("user_id: {:?}", user_id);
-        // let req = req.user;
+        info!("retrieving user_id: {:?}", user_id);
+        let dao = UserDao::new(state.pool.clone());
+        let user_entity = dao.get_user_by_id(user_id).await?;
 
-        // let hashed_user = hash_password_user(req)?;
-        // // ここにDBへの登録処理を書く
-        // let user_dao = UserDao::new(state.pool.clone());
-        // let user_entity = user_dao.create_user(hashed_user).await?;
-        // let token = JwtEncoder::new(user_entity.id).to_token(&state);
-        // let user = User {
-        //     email: user_entity.email,
-        //     username: user_entity.username,
-        //     bio: user_entity.bio,
-        //     image: Some(user_entity.image),
-        //     token,
-        // };
+        info!(
+            "user retrieved successfully email{:?}, generating token",
+            &user_entity.email
+        );
+        let token = JwtService::new(state.clone()).to_token(user_entity.id);
 
-        // Ok((StatusCode::OK, Json(user)))
-        todo!()
+        let user = User {
+            email: user_entity.email,
+            username: user_entity.username,
+            bio: user_entity.bio,
+            image: Some(user_entity.image),
+            token,
+        };
+
+        Ok((StatusCode::OK, Json(user)))
     }
 }
 

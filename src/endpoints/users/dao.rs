@@ -1,4 +1,5 @@
 use crate::{endpoints::users::entity::UserEntity, error::ConduitResult};
+use anyhow::Context as _;
 use uuid::Uuid;
 
 #[derive(Debug, Clone)]
@@ -48,7 +49,24 @@ impl UserDao {
             user_hashed_password.password
         )
         .fetch_one(&self.pool)
-        .await?;
+        .await
+        .context("unexpect error: while inserting user")?;
+        Ok(user)
+    }
+
+    pub async fn get_user_by_id(&self, user_id: Uuid) -> ConduitResult<UserEntity> {
+        let user = sqlx::query_as!(
+            UserEntity,
+            r#"
+            SELECT *
+            FROM users
+            WHERE id = $1
+            "#,
+            user_id
+        )
+        .fetch_one(&self.pool)
+        .await
+        .context("user not found")?;
         Ok(user)
     }
 }
