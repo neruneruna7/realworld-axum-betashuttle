@@ -4,8 +4,23 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-axum = "0.7.4"
+axum = "0.7.5"
 shuttle-axum = { git = "https://github.com/shuttle-hq/shuttle" }
 shuttle-runtime = { git = "https://github.com/shuttle-hq/shuttle" }
+shuttle-shared-db = {git = "https://github.com/shuttle-hq/shuttle", features = ["postgres", "sqlx"]}
 # do the same for all other shuttle crates
+
 tokio = "1.28.2"
+thiserror = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+sqlx = { version = "0.8.2", features = ["runtime-tokio", "postgres", "time", "uuid"] }
+tracing = "0.1.40"
+validator = {version = "0.18.1", features = ["derive"]}
+argon2 = "0.5.3"
+rand = "0.8.5"
+chrono = "0.4.19"
+uuid = { version = "1.10.0", features = ["serde", "v7"] }
+jsonwebtoken = "9.3.0"
+
+[profile.dev]
+debug = 0
