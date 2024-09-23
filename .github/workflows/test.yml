@@ -23,7 +23,7 @@ jobs:
     - run: pg_isready
     - run: sudo -u postgres psql --command="CREATE USER conduit WITH SUPERUSER PASSWORD 'postgres'" --command="\du" postgres
     - run: sudo -u postgres createdb --owner=conduit conduit
-    - uses: baptiste0928/cargo-install@v1
+    - uses: baptiste0928/cargo-install@v3.1.1
       name: Install sqlx-cli
       with:
         crate: sqlx-cli
