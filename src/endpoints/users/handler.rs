@@ -8,7 +8,7 @@ use axum::{
     extract::State,
     http::StatusCode,
     routing::{get, post},
-    Json, Router,
+    Extension, Json, Router,
 };
 use tracing::info;
 
@@ -16,8 +16,8 @@ use crate::{
     endpoints::users::dto::User,
     error::{ConduitResult, CustomArgon2Error},
     extractor::{RequiredAuth, ValidationExtractot},
-    jwt::JwtEncoder,
-    AppState,
+    jwt::JwtService,
+    AppState, ArcState,
 };
 
 use super::{
@@ -28,16 +28,15 @@ use super::{
 pub struct UserRouter;
 
 impl UserRouter {
-    pub(crate) fn new_router(state: Arc<AppState>) -> Router {
+    pub(crate) fn new_router() -> Router {
         Router::new()
             .route("/users", post(Self::register_user))
             .route("/user", get(Self::get_current_user))
-            .with_state(state)
     }
 
     #[tracing::instrument(skip(state))]
     async fn register_user(
-        State(state): State<Arc<AppState>>,
+        Extension(state): Extension<ArcState>,
         ValidationExtractot(req): ValidationExtractot<RegisterUserReq>,
     ) -> ConduitResult<(StatusCode, Json<User>)> {
         let req = req.user;
@@ -46,7 +45,7 @@ impl UserRouter {
         // ここにDBへの登録処理を書く
         let user_dao = UserDao::new(state.pool.clone());
         let user_entity = user_dao.create_user(hashed_user).await?;
-        let token = JwtEncoder::new(state.clone()).to_token(user_entity.id);
+        let token = JwtService::new(state.clone()).to_token(user_entity.id);
         let user = User {
             email: user_entity.email,
             username: user_entity.username,
@@ -60,7 +59,7 @@ impl UserRouter {
 
     #[tracing::instrument(skip(state))]
     async fn get_current_user(
-        State(state): State<Arc<AppState>>,
+        Extension(state): Extension<ArcState>,
         RequiredAuth(user_id): RequiredAuth,
     ) -> ConduitResult<(StatusCode, Json<User>)> {
         info!("user_id: {:?}", user_id);
