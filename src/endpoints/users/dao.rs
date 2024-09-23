@@ -3,8 +3,8 @@ use uuid::Uuid;
 
 #[derive(Debug, Clone)]
 pub struct PasswdHashedNewUser {
-    username: String,
-    email: String,
+    pub username: String,
+    pub email: String,
     password: String,
 }
 

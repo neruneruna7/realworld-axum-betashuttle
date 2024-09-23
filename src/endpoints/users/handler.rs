@@ -34,17 +34,30 @@ impl UserRouter {
             .route("/user", get(Self::get_current_user))
     }
 
-    #[tracing::instrument(skip(state))]
+    // ログ出力結果にパスワードを含まないようにする
+    // emailについては出力するようにする
+    #[tracing::instrument(skip_all,fields(req_user = req.user.email))]
     async fn register_user(
         Extension(state): Extension<ArcState>,
         ValidationExtractot(req): ValidationExtractot<RegisterUserReq>,
     ) -> ConduitResult<(StatusCode, Json<User>)> {
         let req = req.user;
 
+        info!("createing password hash user: {:?}", &req.email);
         let hashed_user = hash_password_user(req)?;
         // ここにDBへの登録処理を書く
+
+        info!(
+            "password hashed successfully creating user: {:?}",
+            &hashed_user.email
+        );
         let user_dao = UserDao::new(state.pool.clone());
         let user_entity = user_dao.create_user(hashed_user).await?;
+
+        info!(
+            "user created successfully generating token user {:?}",
+            &user_entity.email
+        );
         let token = JwtService::new(state.clone()).to_token(user_entity.id);
         let user = User {
             email: user_entity.email,
