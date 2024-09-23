@@ -98,4 +98,18 @@ mod tests {
         };
         assert_eq!(user, test_user);
     }
+
+    #[sqlx::test()]
+    async fn test_get_user_by_id(pool: PgPool) {
+        let new_user = PasswdHashedNewUser {
+            email: "userid_get_test@gmail.com".to_string(),
+            password: "password".to_string(),
+            username: "userid_get_test".to_string(),
+        };
+        let dao = UserDao::new(pool);
+        let user = dao.create_user(new_user.clone()).await.unwrap();
+        let get_user = dao.get_user_by_id(user.id).await.unwrap();
+
+        assert_eq!(user, get_user);
+    }
 }
