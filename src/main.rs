@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use axum::{routing::get, Router};
 use endpoints::users::handler::UserRouter;
 use shuttle_runtime::SecretStore;
@@ -27,6 +29,7 @@ async fn main(
         pool,
         jwt_secret: _secrets.get("JWT_SECRET").unwrap(),
     };
+    let state = Arc::new(state);
 
     let router = Router::new()
         .route("/", get(hello_world))

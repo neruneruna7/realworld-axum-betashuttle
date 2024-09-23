@@ -1,4 +1,4 @@
-use std::time;
+use std::{sync::Arc, time};
 
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -13,25 +13,25 @@ pub struct Claims {
 }
 
 pub struct JwtEncoder {
-    user_id: Uuid,
+    state: Arc<AppState>,
 }
 
 impl JwtEncoder {
-    pub fn new(user_id: Uuid) -> Self {
-        Self { user_id }
+    pub fn new(state: Arc<AppState>) -> Self {
+        Self { state }
     }
 
-    pub(crate) fn to_token(&self, state: &AppState) -> String {
+    pub(crate) fn to_token(&self, user_id: Uuid) -> String {
         let now = chrono::Utc::now();
         let exp = now + DEFALT_SESSION_LEN;
         let claims = Claims {
             exp: exp.timestamp(),
-            user_id: self.user_id,
+            user_id: user_id,
         };
         let token = jsonwebtoken::encode(
             &jsonwebtoken::Header::default(),
             &claims,
-            &jsonwebtoken::EncodingKey::from_secret(state.jwt_secret.as_ref()),
+            &jsonwebtoken::EncodingKey::from_secret(self.state.jwt_secret.as_ref()),
         )
         .unwrap();
         token
