@@ -17,7 +17,7 @@ pub struct JwtService {
 }
 
 impl JwtService {
-    pub fn new(state: ArcState) -> Self {
+    pub(crate) fn new(state: ArcState) -> Self {
         Self { state }
     }
 
