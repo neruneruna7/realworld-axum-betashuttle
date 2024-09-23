@@ -48,22 +48,3 @@ jobs:
     - name: Run tests
       run: cargo test --verbose
 
-
-  postgres:
-    runs-on: ubuntu-latest
-    services:
-      postgres:
-        # Docker Hubのイメージ
-        image: postgres
-        # 動かすコンテナで使う環境変数
-        # この場合はpostgresqlのパスワードを指定している。
-        env:
-          POSTGRES_PASSWORD: postgres
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-
