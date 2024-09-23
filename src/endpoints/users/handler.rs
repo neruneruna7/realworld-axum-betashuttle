@@ -1,11 +1,9 @@
-use std::sync::Arc;
 
 use argon2::{
     password_hash::{rand_core::OsRng, PasswordHasher, SaltString},
     Argon2,
 };
 use axum::{
-    extract::State,
     http::StatusCode,
     routing::{get, post},
     Extension, Json, Router,
@@ -16,8 +14,7 @@ use crate::{
     endpoints::users::dto::User,
     error::{ConduitResult, CustomArgon2Error},
     extractor::{RequiredAuth, ValidationExtractot},
-    jwt::JwtService,
-    AppState, ArcState,
+    jwt::JwtService, ArcState,
 };
 
 use super::{

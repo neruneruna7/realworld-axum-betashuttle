@@ -1,16 +1,14 @@
-use std::sync::Arc;
 
 use axum::{
     async_trait,
-    extract::{FromRef, FromRequest, Request, State},
+    extract::{FromRequest, Request},
     Extension, Json,
 };
 use serde::de::DeserializeOwned;
-use tracing::info;
 use uuid::Uuid;
 use validator::Validate;
 
-use crate::{error::ConduitError, jwt::JwtService, AppState, ArcState};
+use crate::{error::ConduitError, jwt::JwtService, ArcState};
 
 #[derive(Debug, Clone)]
 pub struct ValidationExtractot<T>(pub T);

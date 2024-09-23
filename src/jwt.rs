@@ -1,9 +1,9 @@
-use std::{sync::Arc, time};
+use std::time;
 
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::{AppState, ArcState};
+use crate::ArcState;
 
 const DEFALT_SESSION_LEN: time::Duration = time::Duration::from_secs(60 * 60 * 2);
 #[derive(Debug, Serialize, Deserialize)]
@@ -26,7 +26,7 @@ impl JwtService {
         let exp = now + DEFALT_SESSION_LEN;
         let claims = Claims {
             exp: exp.timestamp(),
-            user_id: user_id,
+            user_id,
         };
         let token = jsonwebtoken::encode(
             &jsonwebtoken::Header::default(),

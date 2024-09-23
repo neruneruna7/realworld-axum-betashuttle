@@ -1,6 +1,6 @@
-use std::{ops::Add, sync::Arc};
+use std::sync::Arc;
 
-use axum::{middleware::AddExtension, routing::get, Extension, Router};
+use axum::{routing::get, Extension, Router};
 use endpoints::users::handler::UserRouter;
 use shuttle_runtime::SecretStore;
 use sqlx::PgPool;
