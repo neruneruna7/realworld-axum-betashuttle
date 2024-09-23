@@ -13,10 +13,57 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+    # postgresを立ち上げた後にテストを実行するために、サービスとしてpostgresを指定
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
 
+    # 環境変数にDATABASE_URLを設定
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/test
     steps:
     - uses: actions/checkout@v4
+    - uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: stable
+        override: true
+    - name: Migrate database
+      run: |
+        sudo apt-get install libpq-dev -y
+        cargo install sqlx-cli --no-default-features --features postgres
+        sqlx mig run
     - name: Build
       run: cargo build --verbose
     - name: Run tests
       run: cargo test --verbose
+
+
+  postgres:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        # Docker Hubのイメージ
+        image: postgres
+        # 動かすコンテナで使う環境変数
+        # この場合はpostgresqlのパスワードを指定している。
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
