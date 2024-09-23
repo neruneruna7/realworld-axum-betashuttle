@@ -13,36 +13,16 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
-    # postgresを立ち上げた後にテストを実行するために、サービスとしてpostgresを指定
-    services:
-      postgres:
-        image: postgres
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-
-    # 環境変数にDATABASE_URLを設定
     env:
-      DATABASE_URL: postgres://postgres:postgres@localhost:5432/test
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/conduit
     steps:
     - uses: actions/checkout@v4
-    - uses: actions-rs/toolchain@v1
-      with:
-        profile: minimal
-        toolchain: stable
-        override: true
-    - name: Migrate database
-      run: |
-        sudo apt-get install libpq-dev -y
-        cargo install sqlx-cli --no-default-features --features postgres
-        sqlx mig run
+    - uses: dtolnay/rust-toolchain@1.80.1
+    - uses: Swatinem/rust-cache@v2
+    - run: sudo systemctl start postgresql.service
+    - run: pg_isready
+    - run: sudo -u postgres psql --command="CREATE USER conduit WITH SUPERUSER PASSWORD 'password'" --command="\du" postgres
+    - run: sudo -u postgres createdb --owner=conduit conduit
     - name: Build
       run: cargo build --verbose
     - name: Run tests
