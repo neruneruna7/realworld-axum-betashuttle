@@ -14,14 +14,14 @@ jobs:
 
     runs-on: ubuntu-latest
     env:
-      DATABASE_URL: postgres://postgres:postgres@localhost:5432/conduit
+      DATABASE_URL: postgres://conduit:postgres@localhost:5432/conduit
     steps:
     - uses: actions/checkout@v4
     - uses: dtolnay/rust-toolchain@1.80.1
     - uses: Swatinem/rust-cache@v2
     - run: sudo systemctl start postgresql.service
     - run: pg_isready
-    - run: sudo -u postgres psql --command="CREATE USER conduit WITH SUPERUSER PASSWORD 'password'" --command="\du" postgres
+    - run: sudo -u postgres psql --command="CREATE USER conduit WITH SUPERUSER PASSWORD 'postgres'" --command="\du" postgres
     - run: sudo -u postgres createdb --owner=conduit conduit
     - name: Build
       run: cargo build --verbose
