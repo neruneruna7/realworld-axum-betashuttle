@@ -57,13 +57,7 @@ impl UserRouter {
             &user_entity.email
         );
         let token = JwtService::new(state.clone()).to_token(user_entity.id);
-        let user = User {
-            email: user_entity.email,
-            username: user_entity.username,
-            bio: user_entity.bio,
-            image: Some(user_entity.image),
-            token,
-        };
+        let user = user_entity.into_dto_with_generated_token(token);
 
         Ok((StatusCode::OK, Json(user)))
     }
@@ -83,13 +77,7 @@ impl UserRouter {
         );
         let token = JwtService::new(state.clone()).to_token(user_entity.id);
 
-        let user = User {
-            email: user_entity.email,
-            username: user_entity.username,
-            bio: user_entity.bio,
-            image: Some(user_entity.image),
-            token,
-        };
+        let user = user_entity.into_dto_with_generated_token(token);
 
         Ok((StatusCode::OK, Json(user)))
     }
