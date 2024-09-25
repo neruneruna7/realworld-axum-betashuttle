@@ -40,7 +40,7 @@ impl UserRouter {
     ) -> ConduitResult<(StatusCode, Json<User>)> {
         let req = req.user;
 
-        info!("createing password hash user: {:?}", &req.email);
+        info!("creating password hash user: {:?}", &req.email);
         let hashed_user = hash_password_user(req)?;
         // ここにDBへの登録処理を書く
 

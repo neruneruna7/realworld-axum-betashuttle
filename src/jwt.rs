@@ -5,7 +5,7 @@ use uuid::Uuid;
 
 use crate::ArcState;
 
-const DEFALT_SESSION_LEN: time::Duration = time::Duration::from_secs(60 * 60 * 2);
+const DEFAULT_SESSION_LEN: time::Duration = time::Duration::from_secs(60 * 60 * 2);
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
     pub exp: i64,
@@ -23,7 +23,7 @@ impl JwtService {
 
     pub(crate) fn to_token(&self, user_id: Uuid) -> String {
         let now = chrono::Utc::now();
-        let exp = now + DEFALT_SESSION_LEN;
+        let exp = now + DEFAULT_SESSION_LEN;
         let claims = Claims {
             exp: exp.timestamp(),
             user_id,

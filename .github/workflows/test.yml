@@ -34,3 +34,11 @@ jobs:
     - name: Run tests
       run: cargo test --verbose
 
+  # typos単体で結果を見たいのでJobを分ける
+  typos:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: typos-action
+      uses: crate-ci/typos@v1.24.6
+
