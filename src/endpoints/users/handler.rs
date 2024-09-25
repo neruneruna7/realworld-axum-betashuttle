@@ -102,9 +102,8 @@ impl UserRouter {
             &user_entity.email
         );
 
-        varify_password(&user_entity.password, &req.password.unwrap()).map_err(|e| {
+        varify_password(&user_entity.password, &req.password.unwrap()).inspect_err(|_| {
             info!("invalid login, user: {:?}", &user_entity.email);
-            e
         })?;
 
         info!("password varified successfully, generating token");
