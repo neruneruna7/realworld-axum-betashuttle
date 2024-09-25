@@ -1,7 +1,6 @@
-
 use argon2::{
     password_hash::{rand_core::OsRng, PasswordHasher, SaltString},
-    Argon2,
+    Argon2, PasswordHash, PasswordVerifier,
 };
 use axum::{
     http::StatusCode,
@@ -12,14 +11,15 @@ use tracing::info;
 
 use crate::{
     endpoints::users::dto::User,
-    error::{ConduitResult, CustomArgon2Error},
+    error::{ConduitError, ConduitResult, CustomArgon2Error},
     extractor::{RequiredAuth, ValidationExtractot},
-    jwt::JwtService, ArcState,
+    jwt::JwtService,
+    ArcState,
 };
 
 use super::{
     dao::{PasswdHashedNewUser, UserDao},
-    dto::{NewUser, RegisterUserReq},
+    dto::{LoginUserReq, NewUser, RegisterUserReq},
 };
 
 pub struct UserRouter;
@@ -28,6 +28,7 @@ impl UserRouter {
     pub(crate) fn new_router() -> Router {
         Router::new()
             .route("/users", post(Self::register_user))
+            .route("/users/login", post(Self::login_user))
             .route("/user", get(Self::get_current_user))
     }
 
@@ -92,6 +93,49 @@ impl UserRouter {
 
         Ok((StatusCode::OK, Json(user)))
     }
+
+    #[tracing::instrument(skip_all,fields(req_user = req.user.email))]
+    async fn login_user(
+        Extension(state): Extension<ArcState>,
+        ValidationExtractot(req): ValidationExtractot<LoginUserReq>,
+    ) -> ConduitResult<(StatusCode, Json<User>)> {
+        let req = req.user;
+
+        let dao = UserDao::new(state.pool.clone());
+        let user_entity = dao.get_user_by_email(&req.email.unwrap()).await?;
+        // let else文 Someを返してきたら束縛 そうでないならelseで書いた文を実行
+        let Some(user_entity) = user_entity else {
+            return Err(ConduitError::NotFound(String::from(
+                "User not found: email is not exist",
+            )));
+        };
+        info!(
+            "user retrieved successfully, email:{:?}, varifying password",
+            &user_entity.email
+        );
+
+        varify_password(&user_entity.password, &req.password.unwrap()).map_err(|e| {
+            info!("invalid login, user: {:?}", &user_entity.email);
+            e
+        })?;
+
+        info!("password varified successfully, generating token");
+        let token = JwtService::new(state.clone()).to_token(user_entity.id);
+
+        let user = user_entity.into_dto_with_generated_token(token);
+
+        Ok((StatusCode::OK, Json(user)))
+    }
+}
+
+/// 成功した場合は何も返さない 失敗した場合はエラーを返す
+fn varify_password(stored_pasword: &str, attemppt_password: &str) -> ConduitResult<()> {
+    let expected = PasswordHash::new(stored_pasword).map_err(CustomArgon2Error)?;
+    let argon2 = Argon2::default();
+    argon2
+        .verify_password(attemppt_password.as_bytes(), &expected)
+        .map_err(CustomArgon2Error)?;
+    Ok(())
 }
 
 fn hash_password_user(req: NewUser) -> ConduitResult<PasswdHashedNewUser> {

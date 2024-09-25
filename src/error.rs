@@ -17,6 +17,8 @@ pub enum ConduitError {
     // 未認証の場合
     #[error("Unauthorized")]
     Unauthorized,
+    #[error("username or password is invalid")]
+    InvalidLogin,
     #[error("Internal Server Error")]
     InternalServerError,
     #[error("{0}")]
@@ -48,6 +50,9 @@ impl IntoResponse for ConduitError {
         info!("Error: {:?}", self);
         let (s, message) = match self {
             Self::Unauthorized => (StatusCode::UNAUTHORIZED, Self::Unauthorized.to_string()),
+            // https://tex2e.github.io/rfc-translater/html/rfc9110.html
+            // RFC 9110より 401: リクエストに認証資格情報が含まれている場合、401応答は、これらの資格情報に対して承認が拒否されたことを示します。
+            Self::InvalidLogin => (StatusCode::UNAUTHORIZED, Self::InvalidLogin.to_string()),
             Self::NotFound(e) => (StatusCode::NOT_FOUND, e),
             Self::InternalServerError => (
                 StatusCode::INTERNAL_SERVER_ERROR,
