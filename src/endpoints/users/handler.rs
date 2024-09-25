@@ -98,15 +98,15 @@ impl UserRouter {
             )));
         };
         info!(
-            "user retrieved successfully, email:{:?}, varifying password",
+            "user retrieved successfully, email:{:?}, verifying password",
             &user_entity.email
         );
 
-        varify_password(&user_entity.password, &req.password.unwrap()).inspect_err(|_| {
+        verify_password(&user_entity.password, &req.password.unwrap()).inspect_err(|_| {
             info!("invalid login, user: {:?}", &user_entity.email);
         })?;
 
-        info!("password varified successfully, generating token");
+        info!("password verified successfully, generating token");
         let token = JwtService::new(state.clone()).to_token(user_entity.id);
 
         let user = user_entity.into_dto_with_generated_token(token);
@@ -116,11 +116,11 @@ impl UserRouter {
 }
 
 /// 成功した場合は何も返さない 失敗した場合はエラーを返す
-fn varify_password(stored_pasword: &str, attemppt_password: &str) -> ConduitResult<()> {
-    let expected = PasswordHash::new(stored_pasword).map_err(CustomArgon2Error)?;
+fn verify_password(stored_password: &str, attempt_password: &str) -> ConduitResult<()> {
+    let expected = PasswordHash::new(stored_password).map_err(CustomArgon2Error)?;
     let argon2 = Argon2::default();
     argon2
-        .verify_password(attemppt_password.as_bytes(), &expected)
+        .verify_password(attempt_password.as_bytes(), &expected)
         .map_err(CustomArgon2Error)?;
     Ok(())
 }
