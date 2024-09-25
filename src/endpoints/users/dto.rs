@@ -50,4 +50,23 @@ pub struct LoginUser {
     pub password: Option<String>,
 }
 
-pub struct UpdateUser{};
+#[derive(Debug, Deserialize, Validate)]
+pub struct UserReq {
+    #[validate(nested)]
+    pub user: UpdateUser,
+}
+
+#[derive(Debug, Serialize)]
+pub struct UserRes {
+    pub user: User,
+}
+
+#[derive(Debug, Validate, Deserialize)]
+pub struct UpdateUser {
+    #[validate(email, required)]
+    pub email: Option<String>,
+    #[validate(required)]
+    pub username: Option<String>,
+    pub bio: Option<String>,
+    pub image: Option<String>,
+}
