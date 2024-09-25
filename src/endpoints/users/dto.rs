@@ -49,3 +49,5 @@ pub struct LoginUser {
     #[validate(required)]
     pub password: Option<String>,
 }
+
+pub struct UpdateUser{};
