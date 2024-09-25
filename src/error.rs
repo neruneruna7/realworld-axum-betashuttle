@@ -19,6 +19,8 @@ pub enum ConduitError {
     Unauthorized,
     #[error("Internal Server Error")]
     InternalServerError,
+    #[error("{0}")]
+    NotFound(String),
     #[error(transparent)]
     JwtError(#[from] jsonwebtoken::errors::Error),
     // DBの操作に失敗した場合
@@ -46,6 +48,7 @@ impl IntoResponse for ConduitError {
         info!("Error: {:?}", self);
         let (s, message) = match self {
             Self::Unauthorized => (StatusCode::UNAUTHORIZED, Self::Unauthorized.to_string()),
+            Self::NotFound(e) => (StatusCode::NOT_FOUND, e),
             Self::InternalServerError => (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Self::InternalServerError.to_string(),
