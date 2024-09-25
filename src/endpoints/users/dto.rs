@@ -30,3 +30,22 @@ pub struct NewUser {
     #[validate(required)]
     pub password: Option<String>,
 }
+
+#[derive(Debug, Deserialize, Validate)]
+pub struct LoginUserReq {
+    #[validate(nested)]
+    pub user: LoginUser,
+}
+
+#[derive(Debug, Serialize)]
+pub struct LoginUserRes {
+    pub user: User,
+}
+
+#[derive(Debug, Validate, Deserialize)]
+pub struct LoginUser {
+    #[validate(email, required)]
+    pub email: Option<String>,
+    #[validate(required)]
+    pub password: Option<String>,
+}
