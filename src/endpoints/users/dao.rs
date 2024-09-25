@@ -50,7 +50,7 @@ impl UserDao {
         )
         .fetch_one(&self.pool)
         .await
-        .context("unexpect error: while inserting user")?;
+        .context("unexpected error: while inserting user")?;
         Ok(user)
     }
 
