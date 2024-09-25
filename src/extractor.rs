@@ -1,11 +1,14 @@
+
 use axum::{
     async_trait,
-    extract::{FromRequest, Request}, Json,
+    extract::{FromRequest, Request},
+    Extension, Json,
 };
 use serde::de::DeserializeOwned;
+use uuid::Uuid;
 use validator::Validate;
 
-use crate::error::ConduitError;
+use crate::{error::ConduitError, jwt::JwtService, ArcState};
 
 #[derive(Debug, Clone)]
 pub struct ValidationExtractot<T>(pub T);
@@ -27,5 +30,32 @@ where
         let Json(value) = Json::<T>::from_request(req, state).await?;
         value.validate()?;
         Ok(ValidationExtractot(value))
+    }
+}
+
+/// Authorization token headerからJWTを抽出する
+pub struct RequiredAuth(pub Uuid);
+
+#[async_trait]
+impl<S> FromRequest<S> for RequiredAuth
+where
+    S: Send + Sync,
+{
+    type Rejection = ConduitError;
+
+    async fn from_request(req: Request, state: &S) -> Result<Self, Self::Rejection> {
+        let headers = req.headers().clone();
+        let token_value = headers
+            .get("Authorization")
+            .ok_or(ConduitError::Unauthorized)?;
+        println!("header_value: {:?}", token_value);
+
+        let Extension(state): Extension<ArcState> =
+            Extension::from_request(req, state).await.map_err(|e| {
+                println!("error: {:?}", e);
+                ConduitError::InternalServerError
+            })?;
+        let claim = JwtService::new(state).get_claim_from_token(token_value.to_str().unwrap())?;
+        Ok(RequiredAuth(claim.user_id))
     }
 }

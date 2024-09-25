@@ -1,4 +1,6 @@
-use axum::{routing::get, Router};
+use std::sync::Arc;
+
+use axum::{routing::get, Extension, Router};
 use endpoints::users::handler::UserRouter;
 use shuttle_runtime::SecretStore;
 use sqlx::PgPool;
@@ -14,6 +16,8 @@ struct AppState {
     jwt_secret: String,
 }
 
+type ArcState = Arc<AppState>;
+
 async fn hello_world() -> &'static str {
     "Hello, world!"
 }
@@ -27,10 +31,12 @@ async fn main(
         pool,
         jwt_secret: _secrets.get("JWT_SECRET").unwrap(),
     };
+    let state = Arc::new(state);
 
     let router = Router::new()
         .route("/", get(hello_world))
-        .nest("/", UserRouter::new_router(state.clone()));
+        .nest("/", UserRouter::new_router())
+        .layer(Extension(state));
 
     Ok(router.into())
 }

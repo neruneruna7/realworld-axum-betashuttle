@@ -21,6 +21,7 @@ rand = "0.8.5"
 chrono = "0.4.19"
 uuid = { version = "1.10.0", features = ["serde", "v7"] }
 jsonwebtoken = "9.3.0"
+anyhow = "1.0.89"
 
 [profile.dev]
 debug = 0
