@@ -19,7 +19,8 @@ use crate::{
 
 use super::{
     dao::{PasswdHashedNewUser, UserDao},
-    dto::{LoginUserReq, NewUser, RegisterUserReq},
+    dto::{LoginUserReq, NewUser, RegisterUserReq, UpdateUser, UpdateUserReq},
+    entity::UserEntity,
 };
 
 pub struct UserRouter;
@@ -29,7 +30,7 @@ impl UserRouter {
         Router::new()
             .route("/users", post(Self::register_user))
             .route("/users/login", post(Self::login_user))
-            .route("/user", get(Self::get_current_user))
+            .route("/user", get(Self::get_current_user).put(Self::update_user))
     }
 
     // ログ出力結果にパスワードを含まないようにする
@@ -42,7 +43,7 @@ impl UserRouter {
         let req = req.user;
 
         info!("creating password hash user: {:?}", &req.email);
-        let hashed_user = hash_password_user(req)?;
+        let hashed_user = hash_password_newuser(req)?;
         // ここにDBへの登録処理を書く
 
         info!(
@@ -113,6 +114,42 @@ impl UserRouter {
 
         Ok((StatusCode::OK, Json(user)))
     }
+
+    #[tracing::instrument(skip_all,fields(req_user = req.user.email))]
+    async fn update_user(
+        RequiredAuth(user_id): RequiredAuth,
+        Extension(state): Extension<ArcState>,
+        ValidationExtractot(req): ValidationExtractot<UpdateUserReq>,
+    ) -> ConduitResult<(StatusCode, Json<User>)> {
+        let req = req.user;
+        // Noneのフィールドを更新しないようにする
+        // ユーザーをIDを使って取得
+        // Noneのフィールドは取得したユーザーのフィールドで上書き
+        // ユーザーを更新
+
+        let dao = UserDao::new(state.pool.clone());
+        info!("retrieving user_id: {:?}", user_id);
+        let user_entity = dao.get_user_by_id(user_id).await?;
+        let user_entity = UpdateUser::update_user_entity(user_entity, req);
+
+        info!(
+            "user retrieved successfully, email:{:?}, updating user",
+            &user_entity.email
+        );
+        let hashed_user_entity = hash_password_user(user_entity)?;
+        let user_entity = dao.update_user(hashed_user_entity).await?;
+
+        info!(
+            "user updated successfully, email:{:?}, generating token",
+            &user_entity.email
+        );
+        let token = JwtService::new(state.clone()).to_token(user_entity.id);
+
+        Ok((
+            StatusCode::OK,
+            Json(user_entity.into_dto_with_generated_token(token)),
+        ))
+    }
 }
 
 /// 成功した場合は何も返さない 失敗した場合はエラーを返す
@@ -125,12 +162,25 @@ fn verify_password(stored_password: &str, attempt_password: &str) -> ConduitResu
     Ok(())
 }
 
-fn hash_password_user(req: NewUser) -> ConduitResult<PasswdHashedNewUser> {
+fn hash_password_newuser(req: NewUser) -> ConduitResult<PasswdHashedNewUser> {
     let hashed_pass = hash_password(&req.password.unwrap()).map(|password| {
         PasswdHashedNewUser::new(req.username.unwrap(), req.email.unwrap(), password)
     })?;
     Ok(hashed_pass)
 }
+
+fn hash_password_user(user: UserEntity) -> ConduitResult<UserEntity> {
+    let hashed_pass = hash_password(&user.password).map(|password| UserEntity {
+        email: user.email,
+        username: user.username,
+        password,
+        bio: user.bio,
+        image: user.image,
+        ..user
+    })?;
+    Ok(hashed_pass)
+}
+
 fn hash_password(password: &str) -> ConduitResult<String> {
     let salt = SaltString::generate(&mut OsRng);
     // OWASPチートシートにより決定

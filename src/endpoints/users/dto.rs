@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
+use super::entity::UserEntity;
+
 #[derive(Debug, Serialize, Default)]
 pub struct User {
     pub email: String,
@@ -51,22 +53,32 @@ pub struct LoginUser {
 }
 
 #[derive(Debug, Deserialize, Validate)]
-pub struct UserReq {
+pub struct UpdateUserReq {
     #[validate(nested)]
     pub user: UpdateUser,
 }
 
 #[derive(Debug, Serialize)]
-pub struct UserRes {
+pub struct UpdateUserRes {
     pub user: User,
 }
 
 #[derive(Debug, Validate, Deserialize)]
 pub struct UpdateUser {
-    #[validate(email, required)]
+    #[validate(email)]
     pub email: Option<String>,
-    #[validate(required)]
     pub username: Option<String>,
     pub bio: Option<String>,
     pub image: Option<String>,
+}
+impl UpdateUser {
+    pub(crate) fn update_user_entity(user_entity: UserEntity, update_user: Self) -> UserEntity {
+        UserEntity {
+            email: update_user.email.unwrap_or(user_entity.email),
+            username: update_user.username.unwrap_or(user_entity.username),
+            bio: update_user.bio.unwrap_or(user_entity.bio),
+            image: update_user.image.unwrap_or(user_entity.image),
+            ..user_entity
+        }
+    }
 }
