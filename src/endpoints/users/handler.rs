@@ -7,8 +7,12 @@ use axum::{
     routing::{get, post, put},
     Extension, Json, Router,
 };
-use axum_macros::debug_handler;
+
 use tracing::info;
+// ハンドラー周りでよくわからないエラーメッセージがでたら，
+// #[debug_handler]をつけてデバッグするといい
+#[allow(unused_imports)]
+use axum_macros::debug_handler;
 
 use crate::{
     endpoints::users::dto::User,
