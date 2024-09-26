@@ -126,7 +126,7 @@ impl UserRouter {
     async fn update_user(
         RequiredAuth(user_id): RequiredAuth,
         Extension(state): Extension<ArcState>,
-        // Requrest本文を消費するエキストラクターは1つのみかつ引数の最後でなければならない
+        // Request本文を消費するエキストラクターは1つのみかつ引数の最後でなければならない
         // https://docs.rs/axum/0.7.6/axum/extract/index.html
         ValidationExtractot(req): ValidationExtractot<UpdateUserReq>,
     ) -> ConduitResult<(StatusCode, Json<User>)> {
