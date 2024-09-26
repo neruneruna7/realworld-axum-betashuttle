@@ -8,7 +8,7 @@ use serde::de::DeserializeOwned;
 use uuid::Uuid;
 use validator::Validate;
 
-use crate::{error::ConduitError, jwt::JwtService, ArcState};
+use crate::{error::ConduitError, services::jwt::JwtService, ArcState};
 
 #[derive(Debug, Clone)]
 pub struct ValidationExtractot<T>(pub T);

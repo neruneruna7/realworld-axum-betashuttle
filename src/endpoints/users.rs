@@ -1,4 +1,4 @@
-mod dao;
+pub mod dao;
 pub mod dto;
-mod entity;
+pub mod entity;
 pub mod handler;
