@@ -4,9 +4,10 @@ use argon2::{
 };
 use axum::{
     http::StatusCode,
-    routing::{get, post},
+    routing::{get, post, put},
     Extension, Json, Router,
 };
+use axum_macros::debug_handler;
 use tracing::info;
 
 use crate::{
@@ -30,7 +31,8 @@ impl UserRouter {
         Router::new()
             .route("/users", post(Self::register_user))
             .route("/users/login", post(Self::login_user))
-            .route("/user", get(Self::get_current_user).put(Self::update_user))
+            .route("/user", get(Self::get_current_user))
+            .route("/user", put(Self::update_user))
     }
 
     // ログ出力結果にパスワードを含まないようにする
@@ -115,10 +117,13 @@ impl UserRouter {
         Ok((StatusCode::OK, Json(user)))
     }
 
+    // #[debug_handler]
     #[tracing::instrument(skip_all,fields(req_user = req.user.email))]
     async fn update_user(
         RequiredAuth(user_id): RequiredAuth,
         Extension(state): Extension<ArcState>,
+        // Requrest本文を消費するエキストラクターは1つのみかつ引数の最後でなければならない
+        // https://docs.rs/axum/0.7.6/axum/extract/index.html
         ValidationExtractot(req): ValidationExtractot<UpdateUserReq>,
     ) -> ConduitResult<(StatusCode, Json<User>)> {
         let req = req.user;
