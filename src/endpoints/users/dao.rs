@@ -85,6 +85,28 @@ impl UserDao {
         .context("user not found")?;
         Ok(user)
     }
+
+    pub async fn update_user(&self, user: UserEntity) -> ConduitResult<UserEntity> {
+        let user = sqlx::query_as!(
+            UserEntity,
+            r#"
+            UPDATE users
+            SET username = $1, email = $2, bio = $3, image = $4, password = $5
+            WHERE id = $6
+            RETURNING *
+            "#,
+            user.username,
+            user.email,
+            user.bio,
+            user.image,
+            user.password,
+            user.id
+        )
+        .fetch_one(&self.pool)
+        .await
+        .context("failed: user update")?;
+        Ok(user)
+    }
 }
 
 #[cfg(test)]
