@@ -12,7 +12,7 @@ use axum_macros::debug_handler;
 
 use crate::{
     endpoints::users::dto::User,
-    error::{ConduitError, ConduitResult, CustomArgon2Error},
+    error::{ConduitError, ConduitResult},
     extractor::{RequiredAuth, ValidationExtractot},
     services::hash::PasswordHashService,
     services::jwt::JwtService,
@@ -20,9 +20,8 @@ use crate::{
 };
 
 use super::{
-    dao::{PasswdHashedNewUser, UserDao},
-    dto::{LoginUserReq, NewUser, RegisterUserReq, UpdateUser, UpdateUserReq},
-    entity::UserEntity,
+    dao::UserDao,
+    dto::{LoginUserReq, RegisterUserReq, UpdateUser, UpdateUserReq},
 };
 
 pub struct UserRouter;
