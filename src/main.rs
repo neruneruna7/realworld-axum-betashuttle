@@ -8,7 +8,7 @@ use sqlx::PgPool;
 pub mod endpoints;
 pub mod error;
 pub mod extractor;
-pub mod jwt;
+pub mod services;
 
 #[derive(Clone)]
 struct AppState {
