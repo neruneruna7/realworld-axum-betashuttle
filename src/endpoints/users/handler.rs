@@ -14,8 +14,8 @@ use crate::{
     endpoints::users::dto::User,
     error::{ConduitError, ConduitResult, CustomArgon2Error},
     extractor::{RequiredAuth, ValidationExtractot},
-    jwt::JwtService,
     services::hash::PasswordHashService,
+    services::jwt::JwtService,
     ArcState,
 };
 
