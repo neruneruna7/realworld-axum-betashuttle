@@ -1,6 +1,8 @@
 @host=http://localhost:8000/api
-@new_user_email=newuser@example.com
-@updated_user_email=updateduser@example.com
+@new_user_email={{$random.email()}}
+@new_username={{$random.alphabetic()}}
+@updated_user_email={{$random.email()}}
+@updated_username={{$random.alphabetic()}}
 ###
 # Create a new user
 POST /users
@@ -9,7 +11,7 @@ Content-Type: application/json
 
 {
   "user": {
-    "username": "newuser",
+    "username": "{{new_username}}",
     "email": "{{new_user_email}}",
     "password": "password"
   }
@@ -22,7 +24,7 @@ Content-Type: application/json
   const {equal} = require('assert');
   const user = response.parsedBody.user;
   equal(user.email, `${new_user_email}`);
-  equal(user.username, "newuser");
+  equal(user.username, `${new_username}`);
   equal(user.bio, "");
   equal(user.image, "");
 }}
@@ -38,7 +40,7 @@ Authorization: {{$global.token}}
   const {equal} = require('assert');
   const user = response.parsedBody.user;
   equal(user.email, `${new_user_email}`);
-  equal(user.username, "newuser");
+  equal(user.username, `${new_username}`);
   equal(user.bio, "");
   equal(user.image, "");
 }}
@@ -54,6 +56,7 @@ Authorization: {{$global.token}}
 
 {
   "user": {
+    "username": "{{updated_username}}",
     "email": "{{updated_user_email}}",
     "bio": "Updated bio",
     "image": "https://example.com/updated-image.jpg"
@@ -65,7 +68,7 @@ Authorization: {{$global.token}}
   const {equal} = require('assert');
   const user = response.parsedBody.user;
   equal(user.email, `${updated_user_email}`);
-  equal(user.username, "newuser");
+  equal(user.username, `${updated_username}`);
   equal(user.bio, "Updated bio");
   equal(user.image, "https://example.com/updated-image.jpg");
 }}
@@ -88,7 +91,7 @@ Content-Type: application/json
   const {equal} = require('assert');
   const user = response.parsedBody.user;
   equal(user.email, `${updated_user_email}`);
-  equal(user.username, "newuser");
+  equal(user.username, `${updated_username}`);
   equal(user.bio, "Updated bio");
   equal(user.image, "https://example.com/updated-image.jpg");
 }}
