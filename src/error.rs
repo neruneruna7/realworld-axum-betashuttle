@@ -29,7 +29,7 @@ pub enum ConduitError {
     #[error(transparent)]
     SqlxError(#[from] sqlx::Error),
     // パスワードのハッシュ化に失敗した場合
-    #[error(transparent)]
+    #[error("Argon2 error: {0}")]
     Argon2Error(#[from] CustomArgon2Error),
     // 現状，下記2つはPOSTでのリクエスト時に発生するエラー
     #[error(transparent)]
@@ -83,7 +83,8 @@ pub struct CustomArgon2Error(pub argon2::password_hash::Error);
 
 impl Display for CustomArgon2Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Argon2 error: {}", self.0)
+        let e = self.0;
+        write!(f, "Argon2 error: {}", e)
     }
 }
 

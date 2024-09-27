@@ -103,9 +103,14 @@ impl UserRouter {
             &user_entity.email
         );
 
+        info!(
+            "{:?}, {:?}",
+            &user_entity.password.clone(),
+            &req.password.clone().unwrap()
+        );
         PasswordHashService::verify_password(&user_entity.password, &req.password.unwrap())
-            .inspect_err(|_| {
-                info!("invalid login, user: {:?}", &user_entity.email);
+            .inspect_err(|e| {
+                info!("invalid login, user: {:?}, err: {}", &user_entity.email, e);
             })?;
 
         info!("password verified successfully, generating token");

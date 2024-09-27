@@ -3,7 +3,7 @@ use validator::Validate;
 
 use super::entity::UserEntity;
 
-#[derive(Debug, Serialize, Default, PartialEq)]
+#[derive(Debug, Clone, Serialize, Default, PartialEq)]
 pub struct User {
     pub email: String,
     pub token: String,

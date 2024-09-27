@@ -59,3 +59,19 @@ impl PasswordHashService {
         Ok(hash.to_string())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::{thread::sleep, time::Duration};
+
+    use super::*;
+
+    #[test]
+    fn hash_verify_password() {
+        let password = "password";
+        let hashed = PasswordHashService::hash_password(password).unwrap();
+        sleep(Duration::from_secs(1));
+        println!("hashed: {:?}, from: {:?}", hashed, &password);
+        PasswordHashService::verify_password(&hashed, password).unwrap();
+    }
+}

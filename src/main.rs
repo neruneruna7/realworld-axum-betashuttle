@@ -26,8 +26,8 @@ async fn main(
 
     let router = Router::new()
         .route("/", get(hello_world))
-        .nest("/", UserRouter::new_router(daos.clone()))
-        .nest("/", ProfileRouter::new_router(daos))
+        .nest("/api", UserRouter::new_router(daos.clone()))
+        .nest("/api", ProfileRouter::new_router(daos))
         .layer(Extension(state));
 
     Ok(router.into())

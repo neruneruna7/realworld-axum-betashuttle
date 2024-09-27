@@ -1,0 +1,55 @@
+@host=http://localhost:8000/api
+###
+# Create a new user
+POST /users
+Accept: application/json
+Content-Type: application/json
+
+{
+  "user": {
+    "username": "newuser",
+    "email": "newuser10@example.com",
+    "password": "password"
+  }
+}
+
+# Extract token from response
+{{
+  $global.token=response.parsedBody.token;
+}}
+###
+
+# Get a user
+GET /user
+Accept: application/json
+Authorization: {{$global.token}}
+
+###
+
+# Update a user
+PUT /user
+Accept: application/json
+Content-Type: application/json
+Authorization: {{$global.token}}
+
+{
+  "user": {
+    "email": "updateduser@example.com",
+    "bio": "Updated bio",
+    "image": "https://example.com/updated-image.jpg"
+  }
+}
+
+###
+
+# Login a user
+POST /users/login
+Accept: application/json
+Content-Type: application/json
+
+{
+  "user": {
+    "email": "updateduser@example.com",
+    "password": "password"
+  }
+}
