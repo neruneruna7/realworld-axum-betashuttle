@@ -27,7 +27,7 @@ impl ProfileRouter {
         Extension(profiles): Extension<ProfileDao>,
         RequiredAuth(current_user_id): RequiredAuth,
     ) -> ConduitResult<(StatusCode, Json<ProfileRes>)> {
-        info!("recieved req: follow profile: {}", username);
+        info!("received req: follow profile: {}", username);
         let followed_user = users.get_user_by_username(&username).await?;
         let Some(followed_user) = followed_user else {
             return Err(ConduitError::NotFound("user not found".to_string()));
