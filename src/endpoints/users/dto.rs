@@ -94,15 +94,3 @@ pub struct UpdateUser {
     pub bio: Option<String>,
     pub image: Option<String>,
 }
-impl UpdateUser {
-    pub(crate) fn update_user_entity(user_entity: UserEntity, update_user: Self) -> UserEntity {
-        UserEntity {
-            email: update_user.email.unwrap_or(user_entity.email),
-            password: update_user.password.unwrap_or(user_entity.password),
-            username: update_user.username.unwrap_or(user_entity.username),
-            bio: update_user.bio.unwrap_or(user_entity.bio),
-            image: update_user.image.unwrap_or(user_entity.image),
-            ..user_entity
-        }
-    }
-}
