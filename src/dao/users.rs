@@ -69,7 +69,23 @@ impl UserDao {
         )
         .fetch_optional(&self.pool)
         .await
-        .context("user not found")?;
+        .context("unexpected error: while querying for user by email")?;
+        Ok(user)
+    }
+
+    pub async fn get_user_by_username(&self, username: &str) -> ConduitResult<Option<UserEntity>> {
+        let user = sqlx::query_as!(
+            UserEntity,
+            r#"
+            SELECT *
+            FROM users
+            WHERE username = $1
+            "#,
+            username
+        )
+        .fetch_optional(&self.pool)
+        .await
+        .context("unexpected error: while querying for user by username")?;
         Ok(user)
     }
 
