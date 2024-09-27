@@ -1,7 +1,7 @@
-use sqlx::types::time::PrimitiveDateTime;
+use sqlx::{prelude::FromRow, types::time::PrimitiveDateTime};
 use uuid::Uuid;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(FromRow, Debug, Clone, PartialEq)]
 pub struct UserFollowEntity {
     pub user_id: Uuid,
     pub created_at: PrimitiveDateTime,
