@@ -69,6 +69,11 @@ pub struct LoginUser {
     pub password: Option<String>,
 }
 
+#[derive(Debug, Serialize)]
+pub struct GetUserRes {
+    pub user: User,
+}
+
 #[derive(Debug, Deserialize, Validate)]
 pub struct UpdateUserReq {
     #[validate(nested)]

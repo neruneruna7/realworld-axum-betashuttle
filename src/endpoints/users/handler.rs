@@ -19,7 +19,10 @@ use crate::{
     ArcState,
 };
 
-use super::dto::{LoginUserReq, RegisterUserReq, UpdateUser, UpdateUserReq};
+use super::dto::{
+    GetUserRes, LoginUserReq, LoginUserRes, RegisterUserReq, RegisterUserRes, UpdateUser,
+    UpdateUserReq, UpdateUserRes,
+};
 
 pub struct UserRouter;
 
@@ -40,7 +43,7 @@ impl UserRouter {
         Extension(state): Extension<ArcState>,
         Extension(user_dao): Extension<UserDao>,
         ValidationExtractot(req): ValidationExtractot<RegisterUserReq>,
-    ) -> ConduitResult<(StatusCode, Json<User>)> {
+    ) -> ConduitResult<(StatusCode, Json<RegisterUserRes>)> {
         let req = req.user;
 
         info!("creating password hash user: {:?}", &req.email);
@@ -59,8 +62,9 @@ impl UserRouter {
         );
         let token = JwtService::new(state.clone()).to_token(user_entity.id);
         let user = user_entity.into_dto_with_generated_token(token);
+        let user_res = RegisterUserRes { user };
 
-        Ok((StatusCode::OK, Json(user)))
+        Ok((StatusCode::OK, Json(user_res)))
     }
 
     #[tracing::instrument(skip(state, user_dao))]
@@ -68,7 +72,7 @@ impl UserRouter {
         Extension(state): Extension<ArcState>,
         Extension(user_dao): Extension<UserDao>,
         RequiredAuth(user_id): RequiredAuth,
-    ) -> ConduitResult<(StatusCode, Json<User>)> {
+    ) -> ConduitResult<(StatusCode, Json<GetUserRes>)> {
         info!("retrieving user_id: {:?}", user_id);
         let user_entity = user_dao.get_user_by_id(user_id).await?;
 
@@ -79,8 +83,9 @@ impl UserRouter {
         let token = JwtService::new(state.clone()).to_token(user_entity.id);
 
         let user = user_entity.into_dto_with_generated_token(token);
+        let user_res = GetUserRes { user };
 
-        Ok((StatusCode::OK, Json(user)))
+        Ok((StatusCode::OK, Json(user_res)))
     }
 
     #[tracing::instrument(skip_all,fields(req_user = req.user.email))]
@@ -88,7 +93,7 @@ impl UserRouter {
         Extension(state): Extension<ArcState>,
         Extension(user_dao): Extension<UserDao>,
         ValidationExtractot(req): ValidationExtractot<LoginUserReq>,
-    ) -> ConduitResult<(StatusCode, Json<User>)> {
+    ) -> ConduitResult<(StatusCode, Json<LoginUserRes>)> {
         let req = req.user;
 
         let user_entity = user_dao.get_user_by_email(&req.email.unwrap()).await?;
@@ -117,8 +122,9 @@ impl UserRouter {
         let token = JwtService::new(state.clone()).to_token(user_entity.id);
 
         let user = user_entity.into_dto_with_generated_token(token);
+        let user_res = LoginUserRes { user };
 
-        Ok((StatusCode::OK, Json(user)))
+        Ok((StatusCode::OK, Json(user_res)))
     }
 
     // #[debug_handler]
@@ -130,7 +136,7 @@ impl UserRouter {
         // Request本文を消費するエキストラクターは1つのみかつ引数の最後でなければならない
         // https://docs.rs/axum/0.7.6/axum/extract/index.html
         ValidationExtractot(req): ValidationExtractot<UpdateUserReq>,
-    ) -> ConduitResult<(StatusCode, Json<User>)> {
+    ) -> ConduitResult<(StatusCode, Json<UpdateUserRes>)> {
         let req = req.user;
         // Noneのフィールドを更新しないようにする
         // ユーザーをIDを使って取得
@@ -152,10 +158,9 @@ impl UserRouter {
             &user_entity.email
         );
         let token = JwtService::new(state.clone()).to_token(user_entity.id);
+        let user = user_entity.into_dto_with_generated_token(token);
+        let user_res = UpdateUserRes { user };
 
-        Ok((
-            StatusCode::OK,
-            Json(user_entity.into_dto_with_generated_token(token)),
-        ))
+        Ok((StatusCode::OK, Json(user_res)))
     }
 }
