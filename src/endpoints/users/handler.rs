@@ -145,8 +145,7 @@ impl UserRouter {
             "user retrieved successfully, email:{:?}, updating user",
             &user_entity.email
         );
-        let hashed_user_entity = PasswordHashService::hash_password_user(user_entity)?;
-        let user_entity = user_dao.update_user(hashed_user_entity).await?;
+        let user_entity = user_dao.update_user(user_entity).await?;
 
         info!(
             "user updated successfully, email:{:?}, generating token",

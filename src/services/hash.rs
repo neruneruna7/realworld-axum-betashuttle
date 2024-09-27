@@ -4,10 +4,7 @@ use argon2::{
 };
 
 use crate::{
-    endpoints::users::{
-        dto::{NewUser, PasswdHashedNewUser},
-        entity::UserEntity,
-    },
+    endpoints::users::dto::{NewUser, PasswdHashedNewUser},
     error::{ConduitResult, CustomArgon2Error},
 };
 
@@ -15,8 +12,11 @@ pub struct PasswordHashService;
 
 impl PasswordHashService {
     /// 成功した場合は何も返さない 失敗した場合はエラーを返す
-    pub fn verify_password(stored_password: &str, attempt_password: &str) -> ConduitResult<()> {
-        let expected = PasswordHash::new(stored_password).map_err(CustomArgon2Error)?;
+    pub fn verify_password(
+        stored_hashed_password: &str,
+        attempt_password: &str,
+    ) -> ConduitResult<()> {
+        let expected = PasswordHash::new(stored_hashed_password).map_err(CustomArgon2Error)?;
         let argon2 = Argon2::default();
         argon2
             .verify_password(attempt_password.as_bytes(), &expected)
@@ -27,18 +27,6 @@ impl PasswordHashService {
     pub fn hash_password_newuser(req: NewUser) -> ConduitResult<PasswdHashedNewUser> {
         let hashed_pass = Self::hash_password(&req.password.unwrap()).map(|password| {
             PasswdHashedNewUser::new(req.username.unwrap(), req.email.unwrap(), password)
-        })?;
-        Ok(hashed_pass)
-    }
-
-    pub fn hash_password_user(user: UserEntity) -> ConduitResult<UserEntity> {
-        let hashed_pass = Self::hash_password(&user.password).map(|password| UserEntity {
-            email: user.email,
-            username: user.username,
-            password,
-            bio: user.bio,
-            image: user.image,
-            ..user
         })?;
         Ok(hashed_pass)
     }
@@ -70,8 +58,19 @@ mod tests {
     fn hash_verify_password() {
         let password = "password";
         let hashed = PasswordHashService::hash_password(password).unwrap();
-        sleep(Duration::from_secs(1));
         println!("hashed: {:?}, from: {:?}", hashed, &password);
         PasswordHashService::verify_password(&hashed, password).unwrap();
+    }
+
+    #[test]
+    fn hash_newuser_verify_password() {
+        let new_user = NewUser {
+            username: Some("username".to_string()),
+            email: Some("email".to_string()),
+            password: Some("password".to_string()),
+        };
+        let hashed = PasswordHashService::hash_password_newuser(new_user).unwrap();
+        println!("hashed: {:?}, from: {:?}", hashed.password, "password");
+        PasswordHashService::verify_password(&hashed.password, "password").unwrap();
     }
 }

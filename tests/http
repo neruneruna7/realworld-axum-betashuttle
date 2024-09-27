@@ -19,12 +19,12 @@ Content-Type: application/json
 }}
 ###
 
-# Get a user
-GET /user
-Accept: application/json
-Authorization: {{$global.token}}
+# # Get a user
+# GET /user
+# Accept: application/json
+# Authorization: {{$global.token}}
 
-###
+# ###
 
 # Update a user
 PUT /user
