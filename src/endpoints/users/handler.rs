@@ -24,7 +24,7 @@ use super::dto::{LoginUserReq, RegisterUserReq, UpdateUser, UpdateUserReq};
 pub struct UserRouter;
 
 impl UserRouter {
-    pub(crate) fn new_router(daos: Daos) -> Router {
+    pub fn new_router(daos: Daos) -> Router {
         Router::new()
             .route("/users", post(Self::register_user))
             .route("/users/login", post(Self::login_user))
