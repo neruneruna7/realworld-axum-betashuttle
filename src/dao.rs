@@ -1,5 +1,6 @@
 use sqlx::{PgPool, Pool};
 
+pub mod profiles;
 pub mod users;
 
 #[derive(Clone)]
