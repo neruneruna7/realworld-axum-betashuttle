@@ -7,7 +7,6 @@ use realworld_axum_betashuttle::{
     AppState,
 };
 use shuttle_runtime::SecretStore;
-use sqlx::PgPool;
 
 async fn hello_world() -> &'static str {
     "Hello, world!"
