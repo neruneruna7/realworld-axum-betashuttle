@@ -12,7 +12,6 @@ use axum_macros::debug_handler;
 
 use crate::{
     dao::{users::UserDao, Daos},
-    endpoints::users::dto::User,
     error::{ConduitError, ConduitResult},
     extractor::{RequiredAuth, ValidationExtractot},
     services::{hash::PasswordHashService, jwt::JwtService},
@@ -20,7 +19,7 @@ use crate::{
 };
 
 use super::dto::{
-    GetUserRes, LoginUserReq, LoginUserRes, RegisterUserReq, RegisterUserRes, UpdateUser,
+    GetUserRes, LoginUserReq, LoginUserRes, RegisterUserReq, RegisterUserRes,
     UpdateUserReq, UpdateUserRes,
 };
 
@@ -150,8 +149,8 @@ impl UserRouter {
             info!("hashing password for user: {:?}", &user_entity.email);
             PasswordHashService::hash_password_user(user_entity)?
         } else {
-            let user_entity = user_entity.update_user_entity(req);
-            user_entity
+            
+            user_entity.update_user_entity(req)
         };
 
         info!(
