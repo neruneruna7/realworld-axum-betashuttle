@@ -145,7 +145,14 @@ impl UserRouter {
 
         info!("retrieving user_id: {:?}", user_id);
         let user_entity = user_dao.get_user_by_id(user_id).await?;
-        let user_entity = UpdateUser::update_user_entity(user_entity, req);
+        let user_entity = if req.password.is_some() {
+            let user_entity = UpdateUser::update_user_entity(user_entity, req);
+            info!("hashing password for user: {:?}", &user_entity.email);
+            PasswordHashService::hash_password_user(user_entity)?
+        } else {
+            let user_entity = UpdateUser::update_user_entity(user_entity, req);
+            user_entity
+        };
 
         info!(
             "user retrieved successfully, email:{:?}, updating user",

@@ -4,7 +4,10 @@ use argon2::{
 };
 
 use crate::{
-    endpoints::users::dto::{NewUser, PasswdHashedNewUser},
+    endpoints::users::{
+        dto::{NewUser, PasswdHashedNewUser},
+        entity::UserEntity,
+    },
     error::{ConduitResult, CustomArgon2Error},
 };
 
@@ -27,6 +30,18 @@ impl PasswordHashService {
     pub fn hash_password_newuser(req: NewUser) -> ConduitResult<PasswdHashedNewUser> {
         let hashed_pass = Self::hash_password(&req.password.unwrap()).map(|password| {
             PasswdHashedNewUser::new(req.username.unwrap(), req.email.unwrap(), password)
+        })?;
+        Ok(hashed_pass)
+    }
+
+    pub fn hash_password_user(user: UserEntity) -> ConduitResult<UserEntity> {
+        let hashed_pass = Self::hash_password(&user.password).map(|password| UserEntity {
+            email: user.email,
+            username: user.username,
+            password,
+            bio: user.bio,
+            image: user.image,
+            ..user
         })?;
         Ok(hashed_pass)
     }
