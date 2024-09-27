@@ -1,10 +1,12 @@
 use std::sync::Arc;
 
 use axum::{routing::get, Extension, Router};
+use dao::Daos;
 use endpoints::users::handler::UserRouter;
 use shuttle_runtime::SecretStore;
 use sqlx::PgPool;
 
+pub mod dao;
 pub mod endpoints;
 pub mod error;
 pub mod extractor;
@@ -32,10 +34,11 @@ async fn main(
         jwt_secret: _secrets.get("JWT_SECRET").unwrap(),
     };
     let state = Arc::new(state);
+    let daos = Daos::new(state.pool.clone());
 
     let router = Router::new()
         .route("/", get(hello_world))
-        .nest("/", UserRouter::new_router())
+        .nest("/", UserRouter::new_router(daos))
         .layer(Extension(state));
 
     Ok(router.into())

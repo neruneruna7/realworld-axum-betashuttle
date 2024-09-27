@@ -4,7 +4,10 @@ use argon2::{
 };
 
 use crate::{
-    endpoints::users::{dao::PasswdHashedNewUser, dto::NewUser, entity::UserEntity},
+    endpoints::users::{
+        dto::{NewUser, PasswdHashedNewUser},
+        entity::UserEntity,
+    },
     error::{ConduitResult, CustomArgon2Error},
 };
 

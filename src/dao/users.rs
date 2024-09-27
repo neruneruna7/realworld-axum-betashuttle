@@ -1,24 +1,11 @@
-use crate::{endpoints::users::entity::UserEntity, error::ConduitResult};
+use crate::{
+    endpoints::users::{dto::PasswdHashedNewUser, entity::UserEntity},
+    error::ConduitResult,
+};
 use anyhow::Context as _;
 use uuid::Uuid;
 
-#[derive(Debug, Clone)]
-pub struct PasswdHashedNewUser {
-    pub username: String,
-    pub email: String,
-    password: String,
-}
-
-impl PasswdHashedNewUser {
-    pub fn new(username: String, email: String, password: String) -> Self {
-        Self {
-            username,
-            email,
-            password,
-        }
-    }
-}
-
+#[derive(Clone)]
 pub struct UserDao {
     pool: sqlx::PgPool,
 }
