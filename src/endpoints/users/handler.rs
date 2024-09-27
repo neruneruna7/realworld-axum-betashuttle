@@ -11,7 +11,7 @@ use tracing::info;
 use axum_macros::debug_handler;
 
 use crate::{
-    dao::{Daos, UsersIntermediateDao},
+    dao::{users::UserDao, Daos},
     endpoints::users::dto::User,
     error::{ConduitError, ConduitResult},
     extractor::{RequiredAuth, ValidationExtractot},
@@ -38,7 +38,7 @@ impl UserRouter {
     #[tracing::instrument(skip_all,fields(req_user = req.user.email))]
     async fn register_user(
         Extension(state): Extension<ArcState>,
-        Extension(users_intermediate_dao): Extension<UsersIntermediateDao>,
+        Extension(user_dao): Extension<UserDao>,
         ValidationExtractot(req): ValidationExtractot<RegisterUserReq>,
     ) -> ConduitResult<(StatusCode, Json<User>)> {
         let req = req.user;
@@ -51,10 +51,7 @@ impl UserRouter {
             "password hashed successfully creating user: {:?}",
             &hashed_user.email
         );
-        let user_entity = users_intermediate_dao
-            .users
-            .create_user(hashed_user)
-            .await?;
+        let user_entity = user_dao.create_user(hashed_user).await?;
 
         info!(
             "user created successfully generating token user {:?}",
@@ -66,14 +63,14 @@ impl UserRouter {
         Ok((StatusCode::OK, Json(user)))
     }
 
-    #[tracing::instrument(skip(state, users_intermediate_dao))]
+    #[tracing::instrument(skip(state, user_dao))]
     async fn get_current_user(
         Extension(state): Extension<ArcState>,
-        Extension(users_intermediate_dao): Extension<UsersIntermediateDao>,
+        Extension(user_dao): Extension<UserDao>,
         RequiredAuth(user_id): RequiredAuth,
     ) -> ConduitResult<(StatusCode, Json<User>)> {
         info!("retrieving user_id: {:?}", user_id);
-        let user_entity = users_intermediate_dao.users.get_user_by_id(user_id).await?;
+        let user_entity = user_dao.get_user_by_id(user_id).await?;
 
         info!(
             "user retrieved successfully email{:?}, generating token",
@@ -89,16 +86,12 @@ impl UserRouter {
     #[tracing::instrument(skip_all,fields(req_user = req.user.email))]
     async fn login_user(
         Extension(state): Extension<ArcState>,
-        Extension(users_intermediate_dao): Extension<UsersIntermediateDao>,
-
+        Extension(user_dao): Extension<UserDao>,
         ValidationExtractot(req): ValidationExtractot<LoginUserReq>,
     ) -> ConduitResult<(StatusCode, Json<User>)> {
         let req = req.user;
 
-        let user_entity = users_intermediate_dao
-            .users
-            .get_user_by_email(&req.email.unwrap())
-            .await?;
+        let user_entity = user_dao.get_user_by_email(&req.email.unwrap()).await?;
         // let else文 Someを返してきたら束縛 そうでないならelseで書いた文を実行
         let Some(user_entity) = user_entity else {
             return Err(ConduitError::NotFound(String::from(
@@ -128,8 +121,7 @@ impl UserRouter {
     async fn update_user(
         RequiredAuth(user_id): RequiredAuth,
         Extension(state): Extension<ArcState>,
-        Extension(users_intermediate_dao): Extension<UsersIntermediateDao>,
-
+        Extension(user_dao): Extension<UserDao>,
         // Request本文を消費するエキストラクターは1つのみかつ引数の最後でなければならない
         // https://docs.rs/axum/0.7.6/axum/extract/index.html
         ValidationExtractot(req): ValidationExtractot<UpdateUserReq>,
@@ -141,7 +133,7 @@ impl UserRouter {
         // ユーザーを更新
 
         info!("retrieving user_id: {:?}", user_id);
-        let user_entity = users_intermediate_dao.users.get_user_by_id(user_id).await?;
+        let user_entity = user_dao.get_user_by_id(user_id).await?;
         let user_entity = UpdateUser::update_user_entity(user_entity, req);
 
         info!(
@@ -149,10 +141,7 @@ impl UserRouter {
             &user_entity.email
         );
         let hashed_user_entity = PasswordHashService::hash_password_user(user_entity)?;
-        let user_entity = users_intermediate_dao
-            .users
-            .update_user(hashed_user_entity)
-            .await?;
+        let user_entity = user_dao.update_user(hashed_user_entity).await?;
 
         info!(
             "user updated successfully, email:{:?}, generating token",
