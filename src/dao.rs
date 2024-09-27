@@ -1,4 +1,4 @@
-use sqlx::{PgPool, Pool};
+use sqlx::PgPool;
 use users::UserDao;
 
 pub mod profiles;

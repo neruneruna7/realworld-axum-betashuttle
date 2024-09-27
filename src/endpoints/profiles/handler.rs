@@ -1,5 +1,4 @@
 use axum::{extract::Path, http::StatusCode, routing::post, Extension, Json, Router};
-use axum_macros::debug_handler;
 use tracing::info;
 
 use crate::{
