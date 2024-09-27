@@ -36,7 +36,7 @@ impl UserRouter {
     // ログ出力結果にパスワードを含まないようにする
     // emailについては出力するようにする
     #[tracing::instrument(skip_all,fields(req_user = req.user.email))]
-    async fn register_user(
+    pub async fn register_user(
         Extension(state): Extension<ArcState>,
         Extension(user_dao): Extension<UserDao>,
         ValidationExtractot(req): ValidationExtractot<RegisterUserReq>,
@@ -64,7 +64,7 @@ impl UserRouter {
     }
 
     #[tracing::instrument(skip(state, user_dao))]
-    async fn get_current_user(
+    pub async fn get_current_user(
         Extension(state): Extension<ArcState>,
         Extension(user_dao): Extension<UserDao>,
         RequiredAuth(user_id): RequiredAuth,
@@ -84,7 +84,7 @@ impl UserRouter {
     }
 
     #[tracing::instrument(skip_all,fields(req_user = req.user.email))]
-    async fn login_user(
+    pub async fn login_user(
         Extension(state): Extension<ArcState>,
         Extension(user_dao): Extension<UserDao>,
         ValidationExtractot(req): ValidationExtractot<LoginUserReq>,
@@ -118,7 +118,7 @@ impl UserRouter {
 
     // #[debug_handler]
     #[tracing::instrument(skip_all,fields(req_user = req.user.email))]
-    async fn update_user(
+    pub async fn update_user(
         RequiredAuth(user_id): RequiredAuth,
         Extension(state): Extension<ArcState>,
         Extension(user_dao): Extension<UserDao>,

@@ -3,7 +3,7 @@ use validator::Validate;
 
 use super::entity::UserEntity;
 
-#[derive(Debug, Serialize, Default)]
+#[derive(Debug, Serialize, Default, PartialEq)]
 pub struct User {
     pub email: String,
     pub token: String,
@@ -12,7 +12,7 @@ pub struct User {
     pub image: Option<String>,
 }
 
-#[derive(Debug, Validate, Deserialize)]
+#[derive(Debug, Clone, Validate, Deserialize)]
 pub struct RegisterUserReq {
     #[validate(nested)]
     pub user: NewUser,
@@ -23,7 +23,7 @@ pub struct RegisterUserRes {
     pub user: User,
 }
 
-#[derive(Debug, Validate, Deserialize)]
+#[derive(Debug, Clone, Validate, Deserialize, PartialEq)]
 pub struct NewUser {
     #[validate(required)]
     pub username: Option<String>,
