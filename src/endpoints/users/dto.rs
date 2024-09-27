@@ -33,6 +33,23 @@ pub struct NewUser {
     pub password: Option<String>,
 }
 
+#[derive(Debug, Clone)]
+pub struct PasswdHashedNewUser {
+    pub username: String,
+    pub email: String,
+    pub password: String,
+}
+
+impl PasswdHashedNewUser {
+    pub fn new(username: String, email: String, password: String) -> Self {
+        Self {
+            username,
+            email,
+            password,
+        }
+    }
+}
+
 #[derive(Debug, Deserialize, Validate)]
 pub struct LoginUserReq {
     #[validate(nested)]

@@ -1,24 +1,11 @@
-use crate::{endpoints::users::entity::UserEntity, error::ConduitResult};
+use crate::{
+    endpoints::users::{dto::PasswdHashedNewUser, entity::UserEntity},
+    error::ConduitResult,
+};
 use anyhow::Context as _;
 use uuid::Uuid;
 
-#[derive(Debug, Clone)]
-pub struct PasswdHashedNewUser {
-    pub username: String,
-    pub email: String,
-    password: String,
-}
-
-impl PasswdHashedNewUser {
-    pub fn new(username: String, email: String, password: String) -> Self {
-        Self {
-            username,
-            email,
-            password,
-        }
-    }
-}
-
+#[derive(Clone)]
 pub struct UserDao {
     pool: sqlx::PgPool,
 }
@@ -82,7 +69,23 @@ impl UserDao {
         )
         .fetch_optional(&self.pool)
         .await
-        .context("user not found")?;
+        .context("unexpected error: while querying for user by email")?;
+        Ok(user)
+    }
+
+    pub async fn get_user_by_username(&self, username: &str) -> ConduitResult<Option<UserEntity>> {
+        let user = sqlx::query_as!(
+            UserEntity,
+            r#"
+            SELECT *
+            FROM users
+            WHERE username = $1
+            "#,
+            username
+        )
+        .fetch_optional(&self.pool)
+        .await
+        .context("unexpected error: while querying for user by username")?;
         Ok(user)
     }
 
