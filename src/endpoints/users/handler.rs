@@ -12,19 +12,21 @@ use axum_macros::debug_handler;
 
 use crate::{
     dao::{users::UserDao, Daos},
-    endpoints::users::dto::User,
     error::{ConduitError, ConduitResult},
     extractor::{RequiredAuth, ValidationExtractot},
     services::{hash::PasswordHashService, jwt::JwtService},
     ArcState,
 };
 
-use super::dto::{LoginUserReq, RegisterUserReq, UpdateUser, UpdateUserReq};
+use super::dto::{
+    GetUserRes, LoginUserReq, LoginUserRes, RegisterUserReq, RegisterUserRes,
+    UpdateUserReq, UpdateUserRes,
+};
 
 pub struct UserRouter;
 
 impl UserRouter {
-    pub(crate) fn new_router(daos: Daos) -> Router {
+    pub fn new_router(daos: Daos) -> Router {
         Router::new()
             .route("/users", post(Self::register_user))
             .route("/users/login", post(Self::login_user))
@@ -36,11 +38,11 @@ impl UserRouter {
     // ログ出力結果にパスワードを含まないようにする
     // emailについては出力するようにする
     #[tracing::instrument(skip_all,fields(req_user = req.user.email))]
-    async fn register_user(
+    pub async fn register_user(
         Extension(state): Extension<ArcState>,
         Extension(user_dao): Extension<UserDao>,
         ValidationExtractot(req): ValidationExtractot<RegisterUserReq>,
-    ) -> ConduitResult<(StatusCode, Json<User>)> {
+    ) -> ConduitResult<(StatusCode, Json<RegisterUserRes>)> {
         let req = req.user;
 
         info!("creating password hash user: {:?}", &req.email);
@@ -59,16 +61,17 @@ impl UserRouter {
         );
         let token = JwtService::new(state.clone()).to_token(user_entity.id);
         let user = user_entity.into_dto_with_generated_token(token);
+        let user_res = RegisterUserRes { user };
 
-        Ok((StatusCode::OK, Json(user)))
+        Ok((StatusCode::OK, Json(user_res)))
     }
 
     #[tracing::instrument(skip(state, user_dao))]
-    async fn get_current_user(
+    pub async fn get_current_user(
         Extension(state): Extension<ArcState>,
         Extension(user_dao): Extension<UserDao>,
         RequiredAuth(user_id): RequiredAuth,
-    ) -> ConduitResult<(StatusCode, Json<User>)> {
+    ) -> ConduitResult<(StatusCode, Json<GetUserRes>)> {
         info!("retrieving user_id: {:?}", user_id);
         let user_entity = user_dao.get_user_by_id(user_id).await?;
 
@@ -79,16 +82,17 @@ impl UserRouter {
         let token = JwtService::new(state.clone()).to_token(user_entity.id);
 
         let user = user_entity.into_dto_with_generated_token(token);
+        let user_res = GetUserRes { user };
 
-        Ok((StatusCode::OK, Json(user)))
+        Ok((StatusCode::OK, Json(user_res)))
     }
 
     #[tracing::instrument(skip_all,fields(req_user = req.user.email))]
-    async fn login_user(
+    pub async fn login_user(
         Extension(state): Extension<ArcState>,
         Extension(user_dao): Extension<UserDao>,
         ValidationExtractot(req): ValidationExtractot<LoginUserReq>,
-    ) -> ConduitResult<(StatusCode, Json<User>)> {
+    ) -> ConduitResult<(StatusCode, Json<LoginUserRes>)> {
         let req = req.user;
 
         let user_entity = user_dao.get_user_by_email(&req.email.unwrap()).await?;
@@ -103,29 +107,35 @@ impl UserRouter {
             &user_entity.email
         );
 
+        info!(
+            "{:?}, {:?}",
+            &user_entity.password.clone(),
+            &req.password.clone().unwrap()
+        );
         PasswordHashService::verify_password(&user_entity.password, &req.password.unwrap())
-            .inspect_err(|_| {
-                info!("invalid login, user: {:?}", &user_entity.email);
+            .inspect_err(|e| {
+                info!("invalid login, user: {:?}, err: {}", &user_entity.email, e);
             })?;
 
         info!("password verified successfully, generating token");
         let token = JwtService::new(state.clone()).to_token(user_entity.id);
 
         let user = user_entity.into_dto_with_generated_token(token);
+        let user_res = LoginUserRes { user };
 
-        Ok((StatusCode::OK, Json(user)))
+        Ok((StatusCode::OK, Json(user_res)))
     }
 
     // #[debug_handler]
     #[tracing::instrument(skip_all,fields(req_user = req.user.email))]
-    async fn update_user(
+    pub async fn update_user(
         RequiredAuth(user_id): RequiredAuth,
         Extension(state): Extension<ArcState>,
         Extension(user_dao): Extension<UserDao>,
         // Request本文を消費するエキストラクターは1つのみかつ引数の最後でなければならない
         // https://docs.rs/axum/0.7.6/axum/extract/index.html
         ValidationExtractot(req): ValidationExtractot<UpdateUserReq>,
-    ) -> ConduitResult<(StatusCode, Json<User>)> {
+    ) -> ConduitResult<(StatusCode, Json<UpdateUserRes>)> {
         let req = req.user;
         // Noneのフィールドを更新しないようにする
         // ユーザーをIDを使って取得
@@ -134,24 +144,29 @@ impl UserRouter {
 
         info!("retrieving user_id: {:?}", user_id);
         let user_entity = user_dao.get_user_by_id(user_id).await?;
-        let user_entity = UpdateUser::update_user_entity(user_entity, req);
+        let user_entity = if req.password.is_some() {
+            let user_entity = user_entity.update_user_entity(req);
+            info!("hashing password for user: {:?}", &user_entity.email);
+            PasswordHashService::hash_password_user(user_entity)?
+        } else {
+            
+            user_entity.update_user_entity(req)
+        };
 
         info!(
             "user retrieved successfully, email:{:?}, updating user",
             &user_entity.email
         );
-        let hashed_user_entity = PasswordHashService::hash_password_user(user_entity)?;
-        let user_entity = user_dao.update_user(hashed_user_entity).await?;
+        let user_entity = user_dao.update_user(user_entity).await?;
 
         info!(
             "user updated successfully, email:{:?}, generating token",
             &user_entity.email
         );
         let token = JwtService::new(state.clone()).to_token(user_entity.id);
+        let user = user_entity.into_dto_with_generated_token(token);
+        let user_res = UpdateUserRes { user };
 
-        Ok((
-            StatusCode::OK,
-            Json(user_entity.into_dto_with_generated_token(token)),
-        ))
+        Ok((StatusCode::OK, Json(user_res)))
     }
 }

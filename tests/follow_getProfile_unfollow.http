@@ -1,0 +1,41 @@
+@host=http://localhost:8000/api
+@A_user_email={{$random.email()}}
+@A_username={{$random.alphabetic()}}
+@B_user_email={{$random.email()}}
+@B_username={{$random.alphabetic()}}
+
+### Create a A user
+POST /users
+Accept: application/json
+Content-Type: application/json
+
+{
+    "user": {
+        "username": "{{A_username}}",
+        "email": "{{A_user_email}}",
+        "password": "password"
+    }
+}
+{{
+  $global.token=response.parsedBody.user.token;
+}}
+
+### Create a B user
+POST /users
+Accept: application/json
+Content-Type: application/json
+
+{
+    "user": {
+        "username": "{{B_username}}",
+        "email": "{{B_user_email}}",
+        "password": "password"
+    }
+}
+
+
+### A user follows B user
+POST /profiles/{{B_username}}/follow
+Accept: application/json
+Authorization: {{$global.token}}
+

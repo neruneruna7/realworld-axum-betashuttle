@@ -1,0 +1,22 @@
+[tasks.dbreset]
+# マイグレーションファイルが3つあるので3回revertしてからrunする
+description = "Reset data the database"
+script = """
+sqlx mig revert
+sqlx mig revert
+sqlx mig revert
+sqlx mig run
+"""
+
+
+[tasks.apitest]
+description = "Run API tests"
+script = """
+echo "user create get update login"
+httpyac -a ./tests/user_create_get_update_login.http
+echo "user create get update with password login"
+httpyac -a ./tests/user_create_get_update-with-password_login.http
+echo "Follow"
+httpyac -a ./tests/follow.http
+"""
+dependencies = ["dbreset"]

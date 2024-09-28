@@ -135,7 +135,7 @@ mod tests {
             email: new_user.email,
             password: new_user.password,
             bio: "".to_string(),
-            image: "".to_string(),
+            image: None,
         };
         assert_eq!(user, test_user);
     }

@@ -1,0 +1,42 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO user_follows (id, follower_id, following_id)\n            VALUES ($1, $2, $3)\n            RETURNING id, created_at, follower_id, following_id\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 1,
+        "name": "created_at",
+        "type_info": "Timestamp"
+      },
+      {
+        "ordinal": 2,
+        "name": "follower_id",
+        "type_info": "Uuid"
+      },
+      {
+        "ordinal": 3,
+        "name": "following_id",
+        "type_info": "Uuid"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Uuid",
+        "Uuid",
+        "Uuid"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "27b659ad27cfcd49b9fce0115780da25af1ab12137a8962c6fff951226714e6a"
+}

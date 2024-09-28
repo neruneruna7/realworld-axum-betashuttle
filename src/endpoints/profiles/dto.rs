@@ -6,7 +6,7 @@ use crate::endpoints::users::entity::UserEntity;
 pub struct Profile {
     pub username: String,
     pub bio: String,
-    pub image: String,
+    pub image: Option<String>,
     pub following: bool,
 }
 

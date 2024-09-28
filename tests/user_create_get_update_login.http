@@ -1,0 +1,90 @@
+@host=http://localhost:8000/api
+@new_user_email={{$random.email()}}
+@new_username={{$random.alphabetic()}}
+@updated_user_email={{$random.email()}}
+@updated_username={{$random.alphabetic()}}
+### Create a new user
+POST /users
+Accept: application/json
+Content-Type: application/json
+
+{
+  "user": {
+    "username": "{{new_username}}",
+    "email": "{{new_user_email}}",
+    "password": "password"
+  }
+}
+
+# Extract token from response
+# and test the response body
+{{
+  $global.token=response.parsedBody.user.token;
+  const {equal} = require('assert');
+  const user = response.parsedBody.user;
+  equal(user.email, `${new_user_email}`);
+  equal(user.username, `${new_username}`);
+  equal(user.bio, "");
+  equal(user.image, "");
+}}
+### Get a user
+GET /user
+Accept: application/json
+Authorization: {{$global.token}}
+
+# test the response body
+{{
+  const {equal} = require('assert');
+  const user = response.parsedBody.user;
+  equal(user.email, `${new_user_email}`);
+  equal(user.username, `${new_username}`);
+  equal(user.bio, "");
+  equal(user.image, "");
+}}
+
+
+### Update a user
+PUT /user
+Accept: application/json
+Content-Type: application/json
+Authorization: {{$global.token}}
+
+{
+  "user": {
+    "username": "{{updated_username}}",
+    "email": "{{updated_user_email}}",
+    "bio": "Updated bio",
+    "image": "https://example.com/updated-image.jpg"
+  }
+}
+
+# test the response body
+{{
+  const {equal} = require('assert');
+  const user = response.parsedBody.user;
+  equal(user.email, `${updated_user_email}`);
+  equal(user.username, `${updated_username}`);
+  equal(user.bio, "Updated bio");
+  equal(user.image, "https://example.com/updated-image.jpg");
+}}
+### Login a user
+POST /users/login
+Accept: application/json
+Content-Type: application/json
+
+{
+  "user": {
+    "email": "{{updated_user_email}}",
+    "password": "password"
+  }
+}
+
+# test the response body
+{{
+  const {equal} = require('assert');
+  const user = response.parsedBody.user;
+  equal(user.email, `${updated_user_email}`);
+  equal(user.username, `${updated_username}`);
+  equal(user.bio, "Updated bio");
+  equal(user.image, "https://example.com/updated-image.jpg");
+}}

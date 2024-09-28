@@ -12,7 +12,7 @@ use super::dto::ProfileRes;
 
 pub struct ProfileRouter;
 impl ProfileRouter {
-    pub(crate) fn new_router(daos: Daos) -> Router {
+    pub fn new_router(daos: Daos) -> Router {
         Router::new()
             .route("/profiles/:username/follow", post(Self::follow_user))
             .layer(Extension(daos.users))

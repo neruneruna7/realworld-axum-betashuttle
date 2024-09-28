@@ -15,8 +15,11 @@ pub struct PasswordHashService;
 
 impl PasswordHashService {
     /// 成功した場合は何も返さない 失敗した場合はエラーを返す
-    pub fn verify_password(stored_password: &str, attempt_password: &str) -> ConduitResult<()> {
-        let expected = PasswordHash::new(stored_password).map_err(CustomArgon2Error)?;
+    pub fn verify_password(
+        stored_hashed_password: &str,
+        attempt_password: &str,
+    ) -> ConduitResult<()> {
+        let expected = PasswordHash::new(stored_hashed_password).map_err(CustomArgon2Error)?;
         let argon2 = Argon2::default();
         argon2
             .verify_password(attempt_password.as_bytes(), &expected)
@@ -57,5 +60,32 @@ impl PasswordHashService {
             .hash_password(password.as_bytes(), &salt)
             .map_err(CustomArgon2Error)?;
         Ok(hash.to_string())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    
+
+    use super::*;
+
+    #[test]
+    fn hash_verify_password() {
+        let password = "password";
+        let hashed = PasswordHashService::hash_password(password).unwrap();
+        println!("hashed: {:?}, from: {:?}", hashed, &password);
+        PasswordHashService::verify_password(&hashed, password).unwrap();
+    }
+
+    #[test]
+    fn hash_newuser_verify_password() {
+        let new_user = NewUser {
+            username: Some("username".to_string()),
+            email: Some("email".to_string()),
+            password: Some("password".to_string()),
+        };
+        let hashed = PasswordHashService::hash_password_newuser(new_user).unwrap();
+        println!("hashed: {:?}, from: {:?}", hashed.password, "password");
+        PasswordHashService::verify_password(&hashed.password, "password").unwrap();
     }
 }

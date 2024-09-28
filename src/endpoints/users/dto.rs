@@ -1,9 +1,8 @@
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
-use super::entity::UserEntity;
 
-#[derive(Debug, Serialize, Default)]
+#[derive(Debug, Clone, Serialize, Default, PartialEq)]
 pub struct User {
     pub email: String,
     pub token: String,
@@ -12,7 +11,7 @@ pub struct User {
     pub image: Option<String>,
 }
 
-#[derive(Debug, Validate, Deserialize)]
+#[derive(Debug, Clone, Validate, Deserialize)]
 pub struct RegisterUserReq {
     #[validate(nested)]
     pub user: NewUser,
@@ -23,7 +22,7 @@ pub struct RegisterUserRes {
     pub user: User,
 }
 
-#[derive(Debug, Validate, Deserialize)]
+#[derive(Debug, Clone, Validate, Deserialize, PartialEq)]
 pub struct NewUser {
     #[validate(required)]
     pub username: Option<String>,
@@ -69,6 +68,11 @@ pub struct LoginUser {
     pub password: Option<String>,
 }
 
+#[derive(Debug, Serialize)]
+pub struct GetUserRes {
+    pub user: User,
+}
+
 #[derive(Debug, Deserialize, Validate)]
 pub struct UpdateUserReq {
     #[validate(nested)]
@@ -84,18 +88,8 @@ pub struct UpdateUserRes {
 pub struct UpdateUser {
     #[validate(email)]
     pub email: Option<String>,
+    pub password: Option<String>,
     pub username: Option<String>,
     pub bio: Option<String>,
     pub image: Option<String>,
-}
-impl UpdateUser {
-    pub(crate) fn update_user_entity(user_entity: UserEntity, update_user: Self) -> UserEntity {
-        UserEntity {
-            email: update_user.email.unwrap_or(user_entity.email),
-            username: update_user.username.unwrap_or(user_entity.username),
-            bio: update_user.bio.unwrap_or(user_entity.bio),
-            image: update_user.image.unwrap_or(user_entity.image),
-            ..user_entity
-        }
-    }
 }

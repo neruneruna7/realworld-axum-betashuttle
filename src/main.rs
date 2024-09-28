@@ -1,25 +1,12 @@
 use std::sync::Arc;
 
 use axum::{routing::get, Extension, Router};
-use dao::Daos;
-use endpoints::profiles::handler::ProfileRouter;
-use endpoints::users::handler::UserRouter;
+use realworld_axum_betashuttle::{
+    dao::Daos,
+    endpoints::{profiles::handler::ProfileRouter, users::handler::UserRouter},
+    AppState,
+};
 use shuttle_runtime::SecretStore;
-use sqlx::PgPool;
-
-pub mod dao;
-pub mod endpoints;
-pub mod error;
-pub mod extractor;
-pub mod services;
-
-#[derive(Clone)]
-struct AppState {
-    pool: PgPool,
-    jwt_secret: String,
-}
-
-type ArcState = Arc<AppState>;
 
 async fn hello_world() -> &'static str {
     "Hello, world!"
@@ -39,8 +26,8 @@ async fn main(
 
     let router = Router::new()
         .route("/", get(hello_world))
-        .nest("/", UserRouter::new_router(daos.clone()))
-        .nest("/", ProfileRouter::new_router(daos))
+        .nest("/api", UserRouter::new_router(daos.clone()))
+        .nest("/api", ProfileRouter::new_router(daos))
         .layer(Extension(state));
 
     Ok(router.into())

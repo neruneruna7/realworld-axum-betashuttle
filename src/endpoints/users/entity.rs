@@ -2,7 +2,7 @@ use sqlx::prelude::*;
 use sqlx::types::time::PrimitiveDateTime;
 use uuid::Uuid;
 
-use super::dto::User;
+use super::dto::{UpdateUser, User};
 
 #[derive(FromRow, Debug, Clone, PartialEq)]
 pub struct UserEntity {
@@ -13,7 +13,7 @@ pub struct UserEntity {
     pub email: String,
     pub password: String,
     pub bio: String,
-    pub image: String,
+    pub image: Option<String>,
 }
 
 impl UserEntity {
@@ -22,8 +22,18 @@ impl UserEntity {
             email: self.email,
             username: self.username,
             bio: self.bio,
-            image: Some(self.image),
+            image: self.image,
             token,
+        }
+    }
+    pub(crate) fn update_user_entity(self, update_user: UpdateUser) -> Self {
+        UserEntity {
+            email: update_user.email.unwrap_or(self.email),
+            password: update_user.password.unwrap_or(self.password),
+            username: update_user.username.unwrap_or(self.username),
+            bio: update_user.bio.unwrap_or(self.bio),
+            image: update_user.image.or(self.image),
+            ..self
         }
     }
 }
