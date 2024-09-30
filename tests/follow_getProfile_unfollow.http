@@ -37,5 +37,5 @@ Content-Type: application/json
 ### A user follows B user
 POST /profiles/{{B_username}}/follow
 Accept: application/json
-Authorization: {{$global.token}}
+Authorization: Token {{$global.token}}
 
