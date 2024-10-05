@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use axum::{extract::Path, http::StatusCode, routing::post, Extension, Json, Router};
 use tracing::info;
 
@@ -8,15 +10,21 @@ use crate::{
     extractor::RequiredAuth,
 };
 
-use super::dto::ProfileRes;
+use super::{
+    dao_trait::{DynProfilesDao, ProfilesDaoTrait},
+    dto::ProfileRes,
+};
 
 pub struct ProfileRouter;
 impl ProfileRouter {
     pub fn new_router(daos: Daos) -> Router {
+        // ここに書くのはなぁ，感はある
+        let dyn_profiles_dao: DynProfilesDao = Arc::new(daos.profiles);
+        // うーん，どうせ1つしかないんだしdyn じゃなくて impl にしたいよなぁ
         Router::new()
             .route("/profiles/:username/follow", post(Self::follow_user))
             .layer(Extension(daos.users))
-            .layer(Extension(daos.profiles))
+            .layer(Extension(dyn_profiles_dao))
     }
 
     #[tracing::instrument(skip(users, profiles))]
@@ -24,7 +32,7 @@ impl ProfileRouter {
     pub async fn follow_user(
         Path(username): Path<String>,
         Extension(users): Extension<UserDao>,
-        Extension(profiles): Extension<ProfileDao>,
+        Extension(profiles): Extension<DynProfilesDao>,
         RequiredAuth(current_user_id): RequiredAuth,
     ) -> ConduitResult<(StatusCode, Json<ProfileRes>)> {
         info!("received req: follow profile: {}", username);

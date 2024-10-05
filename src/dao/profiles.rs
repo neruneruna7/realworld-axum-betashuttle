@@ -1,5 +1,9 @@
-use crate::{endpoints::profiles::entity::UserFollowEntity, error::ConduitResult};
+use crate::{
+    endpoints::profiles::{dao_trait::ProfilesDaoTrait, entity::UserFollowEntity},
+    error::ConduitResult,
+};
 use anyhow::Context as _;
+use axum::async_trait;
 use uuid::Uuid;
 
 #[derive(Clone)]
@@ -12,7 +16,49 @@ impl ProfileDao {
         Self { pool }
     }
 
-    pub async fn get_user_following(&self, user_id: Uuid) -> ConduitResult<Vec<UserFollowEntity>> {
+    // pub async fn get_user_following(&self, user_id: Uuid) -> ConduitResult<Vec<UserFollowEntity>> {
+    //     let user_follows = sqlx::query_as!(
+    //         UserFollowEntity,
+    //         r#"
+    //         SELECT id, created_at, follower_id, following_id
+    //         FROM user_follows
+    //         WHERE follower_id = $1
+    //         "#,
+    //         user_id
+    //     )
+    //     .fetch_all(&self.pool)
+    //     .await
+    //     .context("unexpected error: while fetching user_follows")?;
+    //     Ok(user_follows)
+    // }
+
+    // pub async fn following_user(
+    //     &self,
+    //     follower_id: Uuid,
+    //     following_id: Uuid,
+    // ) -> ConduitResult<UserFollowEntity> {
+    //     let uuid = Uuid::now_v7();
+    //     let user_follow = sqlx::query_as!(
+    //         UserFollowEntity,
+    //         r#"
+    //         INSERT INTO user_follows (id, follower_id, following_id)
+    //         VALUES ($1, $2, $3)
+    //         RETURNING id, created_at, follower_id, following_id
+    //         "#,
+    //         uuid,
+    //         follower_id,
+    //         following_id
+    //     )
+    //     .fetch_one(&self.pool)
+    //     .await
+    //     .context("unexpected error: while inserting user_follow")?;
+    //     Ok(user_follow)
+    // }
+}
+
+#[async_trait]
+impl ProfilesDaoTrait for ProfileDao {
+    async fn get_user_following(&self, user_id: Uuid) -> ConduitResult<Vec<UserFollowEntity>> {
         let user_follows = sqlx::query_as!(
             UserFollowEntity,
             r#"
@@ -28,7 +74,7 @@ impl ProfileDao {
         Ok(user_follows)
     }
 
-    pub async fn following_user(
+    async fn following_user(
         &self,
         follower_id: Uuid,
         following_id: Uuid,
