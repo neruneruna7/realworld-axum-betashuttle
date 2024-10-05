@@ -5,6 +5,7 @@ use crate::error::ConduitResult;
 
 use super::entity::UserFollowEntity;
 
+#[cfg_attr(test, mockall::automock)]
 #[async_trait]
 pub trait ProfilesDao {
     async fn get_user_following(&self, user_id: Uuid) -> ConduitResult<Vec<UserFollowEntity>>;

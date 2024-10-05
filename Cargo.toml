@@ -23,6 +23,7 @@ uuid = { version = "1.10.0", features = ["serde", "v7"] }
 jsonwebtoken = "9.3.0"
 anyhow = "1.0.89"
 axum-macros = "0.4.2"
+mockall = "0.13.0"
 
 [profile.dev]
 debug = 0
