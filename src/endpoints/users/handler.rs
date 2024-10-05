@@ -13,7 +13,7 @@ use tracing::info;
 use axum_macros::debug_handler;
 
 use crate::{
-    dao::{users::UserDao, Daos},
+    dao::Daos,
     error::{ConduitError, ConduitResult},
     extractor::{RequiredAuth, ValidationExtractot},
     services::{hash::PasswordHashService, jwt::JwtService},

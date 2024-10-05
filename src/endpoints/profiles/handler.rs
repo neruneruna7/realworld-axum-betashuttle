@@ -4,7 +4,7 @@ use axum::{extract::Path, http::StatusCode, routing::post, Extension, Json, Rout
 use tracing::info;
 
 use crate::{
-    dao::{profiles::ProfileDao, users::UserDao, Daos},
+    dao::Daos,
     endpoints::{profiles::dto::Profile, users::dao_trait::DynUsersDao},
     error::{ConduitError, ConduitResult},
     extractor::RequiredAuth,

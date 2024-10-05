@@ -75,7 +75,7 @@ where
             .split_whitespace()
             .collect::<Vec<_>>();
 
-        let Some(token_value_key) = token_value.get(0) else {
+        let Some(token_value_key) = token_value.first() else {
             return Err(ConduitError::Unauthorized);
         };
         if token_value_key != &"Token" {
