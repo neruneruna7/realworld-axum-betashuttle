@@ -1,8 +1,9 @@
 use crate::{
-    endpoints::users::{dto::PasswdHashedNewUser, entity::UserEntity},
+    endpoints::users::{dao_trait::UsersDaoTrait, dto::PasswdHashedNewUser, entity::UserEntity},
     error::ConduitResult,
 };
 use anyhow::Context as _;
+use axum::async_trait;
 use uuid::Uuid;
 
 #[derive(Clone)]
@@ -14,9 +15,12 @@ impl UserDao {
     pub fn new(pool: sqlx::PgPool) -> Self {
         Self { pool }
     }
+}
 
+#[async_trait]
+impl UsersDaoTrait for UserDao {
     /// パスワードをハッシュ化しないまま値を渡さないでください
-    pub async fn create_user(
+    async fn create_user(
         &self,
         user_hashed_password: PasswdHashedNewUser,
     ) -> ConduitResult<UserEntity> {
@@ -41,7 +45,7 @@ impl UserDao {
         Ok(user)
     }
 
-    pub async fn get_user_by_id(&self, user_id: Uuid) -> ConduitResult<UserEntity> {
+    async fn get_user_by_id(&self, user_id: Uuid) -> ConduitResult<UserEntity> {
         let user = sqlx::query_as!(
             UserEntity,
             r#"
@@ -57,7 +61,7 @@ impl UserDao {
         Ok(user)
     }
 
-    pub async fn get_user_by_email(&self, email: &str) -> ConduitResult<Option<UserEntity>> {
+    async fn get_user_by_email(&self, email: &str) -> ConduitResult<Option<UserEntity>> {
         let user = sqlx::query_as!(
             UserEntity,
             r#"
@@ -73,7 +77,7 @@ impl UserDao {
         Ok(user)
     }
 
-    pub async fn get_user_by_username(&self, username: &str) -> ConduitResult<Option<UserEntity>> {
+    async fn get_user_by_username(&self, username: &str) -> ConduitResult<Option<UserEntity>> {
         let user = sqlx::query_as!(
             UserEntity,
             r#"
@@ -89,7 +93,7 @@ impl UserDao {
         Ok(user)
     }
 
-    pub async fn update_user(&self, user: UserEntity) -> ConduitResult<UserEntity> {
+    async fn update_user(&self, user: UserEntity) -> ConduitResult<UserEntity> {
         let user = sqlx::query_as!(
             UserEntity,
             r#"

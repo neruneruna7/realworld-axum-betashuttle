@@ -1,9 +1,13 @@
+use std::sync::Arc;
+
 use crate::{
     endpoints::users::{dto::PasswdHashedNewUser, entity::UserEntity},
     error::ConduitResult,
 };
 use axum::async_trait;
 use uuid::Uuid;
+
+pub type DynUsersDao = Arc<dyn UsersDaoTrait + Send + Sync>;
 
 #[cfg_attr(test, mockall::automock)]
 #[async_trait]

@@ -5,7 +5,7 @@ use tracing::info;
 
 use crate::{
     dao::{profiles::ProfileDao, users::UserDao, Daos},
-    endpoints::profiles::dto::Profile,
+    endpoints::{profiles::dto::Profile, users::dao_trait::DynUsersDao},
     error::{ConduitError, ConduitResult},
     extractor::RequiredAuth,
 };
@@ -19,11 +19,12 @@ pub struct ProfileRouter;
 impl ProfileRouter {
     pub fn new_router(daos: Daos) -> Router {
         // ここに書くのはなぁ，感はある
+        let dyn_users_dao: DynUsersDao = Arc::new(daos.users);
         let dyn_profiles_dao: DynProfilesDao = Arc::new(daos.profiles);
         // うーん，どうせ1つしかないんだしdyn じゃなくて impl にしたいよなぁ
         Router::new()
             .route("/profiles/:username/follow", post(Self::follow_user))
-            .layer(Extension(daos.users))
+            .layer(Extension(dyn_users_dao))
             .layer(Extension(dyn_profiles_dao))
     }
 
@@ -31,7 +32,7 @@ impl ProfileRouter {
     // #[debug_handler]
     pub async fn follow_user(
         Path(username): Path<String>,
-        Extension(users): Extension<UserDao>,
+        Extension(users): Extension<DynUsersDao>,
         Extension(profiles): Extension<DynProfilesDao>,
         RequiredAuth(current_user_id): RequiredAuth,
     ) -> ConduitResult<(StatusCode, Json<ProfileRes>)> {
