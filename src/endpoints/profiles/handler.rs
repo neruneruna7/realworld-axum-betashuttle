@@ -10,10 +10,7 @@ use crate::{
     extractor::RequiredAuth,
 };
 
-use super::{
-    dao_trait::{DynProfilesDao, ProfilesDaoTrait},
-    dto::ProfileRes,
-};
+use super::{dao_trait::DynProfilesDao, dto::ProfileRes};
 
 pub struct ProfileRouter;
 impl ProfileRouter {
