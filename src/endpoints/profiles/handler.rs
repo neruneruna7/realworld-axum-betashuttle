@@ -12,17 +12,23 @@ use crate::{
 
 use super::{dao_trait::DynProfilesDao, dto::ProfileRes};
 
-pub struct ProfileRouter;
+pub struct ProfileRouter {
+    dyn_users_dao: DynUsersDao,
+    dyn_profiles_dao: DynProfilesDao,
+}
 impl ProfileRouter {
-    pub fn new_router(daos: Daos) -> Router {
-        // ここに書くのはなぁ，感はある
-        let dyn_users_dao: DynUsersDao = Arc::new(daos.users);
-        let dyn_profiles_dao: DynProfilesDao = Arc::new(daos.profiles);
-        // うーん，どうせ1つしかないんだしdyn じゃなくて impl にしたいよなぁ
+    pub fn new(dyn_users_dao: DynUsersDao, dyn_profiles_dao: DynProfilesDao) -> Self {
+        Self {
+            dyn_users_dao,
+            dyn_profiles_dao,
+        }
+    }
+
+    pub fn to_router(&self) -> Router {
         Router::new()
             .route("/profiles/:username/follow", post(Self::follow_user))
-            .layer(Extension(dyn_users_dao))
-            .layer(Extension(dyn_profiles_dao))
+            .layer(Extension(self.dyn_users_dao.clone()))
+            .layer(Extension(self.dyn_profiles_dao.clone()))
     }
 
     #[tracing::instrument(skip(users, profiles))]

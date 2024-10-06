@@ -28,17 +28,22 @@ use super::{
     },
 };
 
-pub struct UserRouter;
+pub struct UserRouter {
+    dyn_users_dao: DynUsersDao,
+}
 
 impl UserRouter {
-    pub fn new_router(daos: Daos) -> Router {
-        let dyn_users_dao: DynUsersDao = Arc::new(daos.users);
+    pub fn new(dyn_users_dao: DynUsersDao) -> Self {
+        Self { dyn_users_dao }
+    }
+
+    pub fn to_router(&self) -> Router {
         Router::new()
             .route("/users", post(Self::register_user))
             .route("/users/login", post(Self::login_user))
             .route("/user", get(Self::get_current_user))
             .route("/user", put(Self::update_user))
-            .layer(Extension(dyn_users_dao))
+            .layer(Extension(self.dyn_users_dao.clone()))
     }
 
     // ログ出力結果にパスワードを含まないようにする

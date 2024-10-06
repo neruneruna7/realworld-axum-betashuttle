@@ -3,7 +3,10 @@ use std::sync::Arc;
 use axum::{routing::get, Extension, Router};
 use realworld_axum_betashuttle::{
     dao::Daos,
-    endpoints::{profiles::handler::ProfileRouter, users::handler::UserRouter},
+    endpoints::{
+        profiles::{dao_trait::DynProfilesDao, handler::ProfileRouter},
+        users::{dao_trait::DynUsersDao, handler::UserRouter},
+    },
     AppState,
 };
 use shuttle_runtime::SecretStore;
@@ -24,10 +27,16 @@ async fn main(
     let state = Arc::new(state);
     let daos = Daos::new(state.pool.clone());
 
+    let dyn_users_dao = Arc::new(daos.users) as DynUsersDao;
+    let dyn_profiles_dao = Arc::new(daos.profiles) as DynProfilesDao;
+
     let router = Router::new()
         .route("/", get(hello_world))
-        .nest("/api", UserRouter::new_router(daos.clone()))
-        .nest("/api", ProfileRouter::new_router(daos))
+        .nest("/api", UserRouter::new(dyn_users_dao.clone()).to_router())
+        .nest(
+            "/api",
+            ProfileRouter::new(dyn_users_dao, dyn_profiles_dao).to_router(),
+        )
         .layer(Extension(state));
 
     Ok(router.into())
