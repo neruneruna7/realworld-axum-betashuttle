@@ -17,6 +17,6 @@ httpyac -a ./tests/user_create_get_update_login.http
 echo "user create get update with password login"
 httpyac -a ./tests/user_create_get_update-with-password_login.http
 echo "Follow"
-httpyac -a ./tests/follow.http
+httpyac -a ./tests/follow_getProfile_unfollow.http
 """
 dependencies = ["dbreset"]

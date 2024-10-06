@@ -1,5 +1,9 @@
-use crate::{endpoints::profiles::entity::UserFollowEntity, error::ConduitResult};
+use crate::{
+    endpoints::profiles::{dao_trait::ProfilesDaoTrait, entity::UserFollowEntity},
+    error::ConduitResult,
+};
 use anyhow::Context as _;
+use axum::async_trait;
 use uuid::Uuid;
 
 #[derive(Clone)]
@@ -11,8 +15,12 @@ impl ProfileDao {
     pub fn new(pool: sqlx::PgPool) -> Self {
         Self { pool }
     }
+}
 
-    pub async fn get_user_following(&self, user_id: Uuid) -> ConduitResult<Vec<UserFollowEntity>> {
+#[async_trait]
+impl ProfilesDaoTrait for ProfileDao {
+    /// ユーザーIDをもつユーザーがフォローしているユーザーリストを取得
+    async fn get_user_followees(&self, user_id: Uuid) -> ConduitResult<Vec<UserFollowEntity>> {
         let user_follows = sqlx::query_as!(
             UserFollowEntity,
             r#"
@@ -28,7 +36,7 @@ impl ProfileDao {
         Ok(user_follows)
     }
 
-    pub async fn following_user(
+    async fn following_user(
         &self,
         follower_id: Uuid,
         following_id: Uuid,

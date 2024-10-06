@@ -11,28 +11,36 @@ use tracing::info;
 use axum_macros::debug_handler;
 
 use crate::{
-    dao::{users::UserDao, Daos},
     error::{ConduitError, ConduitResult},
     extractor::{RequiredAuth, ValidationExtractot},
     services::{hash::PasswordHashService, jwt::JwtService},
     ArcState,
 };
 
-use super::dto::{
-    GetUserRes, LoginUserReq, LoginUserRes, RegisterUserReq, RegisterUserRes,
-    UpdateUserReq, UpdateUserRes,
+use super::{
+    dao_trait::DynUsersDao,
+    dto::{
+        GetUserRes, LoginUserReq, LoginUserRes, RegisterUserReq, RegisterUserRes, UpdateUserReq,
+        UpdateUserRes,
+    },
 };
 
-pub struct UserRouter;
+pub struct UserRouter {
+    dyn_users_dao: DynUsersDao,
+}
 
 impl UserRouter {
-    pub fn new_router(daos: Daos) -> Router {
+    pub fn new(dyn_users_dao: DynUsersDao) -> Self {
+        Self { dyn_users_dao }
+    }
+
+    pub fn to_router(&self) -> Router {
         Router::new()
             .route("/users", post(Self::register_user))
             .route("/users/login", post(Self::login_user))
             .route("/user", get(Self::get_current_user))
             .route("/user", put(Self::update_user))
-            .layer(Extension(daos.users))
+            .layer(Extension(self.dyn_users_dao.clone()))
     }
 
     // ログ出力結果にパスワードを含まないようにする
@@ -40,7 +48,7 @@ impl UserRouter {
     #[tracing::instrument(skip_all,fields(req_user = req.user.email))]
     pub async fn register_user(
         Extension(state): Extension<ArcState>,
-        Extension(user_dao): Extension<UserDao>,
+        Extension(user_dao): Extension<DynUsersDao>,
         ValidationExtractot(req): ValidationExtractot<RegisterUserReq>,
     ) -> ConduitResult<(StatusCode, Json<RegisterUserRes>)> {
         let req = req.user;
@@ -69,7 +77,7 @@ impl UserRouter {
     #[tracing::instrument(skip(state, user_dao))]
     pub async fn get_current_user(
         Extension(state): Extension<ArcState>,
-        Extension(user_dao): Extension<UserDao>,
+        Extension(user_dao): Extension<DynUsersDao>,
         RequiredAuth(user_id): RequiredAuth,
     ) -> ConduitResult<(StatusCode, Json<GetUserRes>)> {
         info!("retrieving user_id: {:?}", user_id);
@@ -90,7 +98,7 @@ impl UserRouter {
     #[tracing::instrument(skip_all,fields(req_user = req.user.email))]
     pub async fn login_user(
         Extension(state): Extension<ArcState>,
-        Extension(user_dao): Extension<UserDao>,
+        Extension(user_dao): Extension<DynUsersDao>,
         ValidationExtractot(req): ValidationExtractot<LoginUserReq>,
     ) -> ConduitResult<(StatusCode, Json<LoginUserRes>)> {
         let req = req.user;
@@ -131,7 +139,7 @@ impl UserRouter {
     pub async fn update_user(
         RequiredAuth(user_id): RequiredAuth,
         Extension(state): Extension<ArcState>,
-        Extension(user_dao): Extension<UserDao>,
+        Extension(user_dao): Extension<DynUsersDao>,
         // Request本文を消費するエキストラクターは1つのみかつ引数の最後でなければならない
         // https://docs.rs/axum/0.7.6/axum/extract/index.html
         ValidationExtractot(req): ValidationExtractot<UpdateUserReq>,
@@ -149,7 +157,6 @@ impl UserRouter {
             info!("hashing password for user: {:?}", &user_entity.email);
             PasswordHashService::hash_password_user(user_entity)?
         } else {
-            
             user_entity.update_user_entity(req)
         };
 
