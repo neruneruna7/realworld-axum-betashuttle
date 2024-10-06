@@ -119,3 +119,55 @@ where
 //         Ok(RequiredAuth(claim.user_id))
 //     }
 // }
+
+/// Authorization token headerからJWTを抽出する. Option型とし，トークンがなければNoneを返す
+/// トークンがない場合は，ログインしていないとみなす
+pub struct OptionalAuth(pub Option<Uuid>);
+
+#[async_trait]
+impl<S> FromRequestParts<S> for OptionalAuth
+where
+    S: Send + Sync,
+{
+    type Rejection = ConduitError;
+
+    async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
+        let headers = parts.headers.clone();
+        let token_value = headers.get(AUTHORIZATION);
+
+        let token_value = match token_value {
+            Some(token_value) => {
+                let token_value = token_value
+                    .to_str()
+                    .map_err(|x| {
+                        info!("error: {:?}", x);
+                        ConduitError::Unauthorized
+                    })?
+                    .split_whitespace()
+                    .collect::<Vec<_>>();
+
+                let Some(token_value_key) = token_value.first() else {
+                    return Err(ConduitError::Unauthorized);
+                };
+                if token_value_key != &"Token" {
+                    return Err(ConduitError::Unauthorized);
+                }
+                let Some(token_value) = token_value.get(1) else {
+                    return Err(ConduitError::Unauthorized);
+                };
+                let Extension(state): Extension<ArcState> =
+                    Extension::from_request_parts(parts, state)
+                        .await
+                        .map_err(|e| {
+                            println!("error: {:?}", e);
+                            ConduitError::InternalServerError
+                        })?;
+                let claim = JwtService::new(state).get_claim_from_token(token_value)?;
+                Some(claim.user_id)
+            }
+            None => None,
+        };
+
+        Ok(OptionalAuth(token_value))
+    }
+}
