@@ -19,7 +19,8 @@ impl ProfileDao {
 
 #[async_trait]
 impl ProfilesDaoTrait for ProfileDao {
-    async fn get_user_following(&self, user_id: Uuid) -> ConduitResult<Vec<UserFollowEntity>> {
+    /// ユーザーIDをもつユーザーがフォローしているユーザーリストを取得
+    async fn get_user_followees(&self, user_id: Uuid) -> ConduitResult<Vec<UserFollowEntity>> {
         let user_follows = sqlx::query_as!(
             UserFollowEntity,
             r#"

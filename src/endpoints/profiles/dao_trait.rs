@@ -14,7 +14,7 @@ pub type DynProfilesDao = Arc<dyn ProfilesDaoTrait + Send + Sync>;
 #[cfg_attr(test, mockall::automock)]
 #[async_trait]
 pub trait ProfilesDaoTrait {
-    async fn get_user_following(&self, user_id: Uuid) -> ConduitResult<Vec<UserFollowEntity>>;
+    async fn get_user_followees(&self, user_id: Uuid) -> ConduitResult<Vec<UserFollowEntity>>;
     async fn following_user(
         &self,
         follower_id: Uuid,

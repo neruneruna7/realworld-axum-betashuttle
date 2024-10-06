@@ -51,7 +51,7 @@ impl ProfileRouter {
         };
 
         let is_following = profiles
-            .get_user_following(followed_user.id)
+            .get_user_followees(followed_user.id)
             .await?
             .iter()
             .any(|f| f.follower_id == current_user_id);
@@ -93,7 +93,7 @@ impl ProfileRouter {
         // current_user_idがある場合，フォローしているかどうかを取得
         let is_following = if let Some(user_id) = current_user_id {
             let is_following = profiles
-                .get_user_following(user_entity.id)
+                .get_user_followees(user_id)
                 .await?
                 .iter()
                 .any(|f| f.follower_id == user_id);
