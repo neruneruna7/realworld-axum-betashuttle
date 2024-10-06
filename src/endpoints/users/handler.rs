@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use axum::{
     http::StatusCode,
     routing::{get, post, put},
@@ -13,7 +11,6 @@ use tracing::info;
 use axum_macros::debug_handler;
 
 use crate::{
-    dao::Daos,
     error::{ConduitError, ConduitResult},
     extractor::{RequiredAuth, ValidationExtractot},
     services::{hash::PasswordHashService, jwt::JwtService},

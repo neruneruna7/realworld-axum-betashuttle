@@ -1,10 +1,8 @@
-use std::sync::Arc;
 
 use axum::{extract::Path, http::StatusCode, routing::post, Extension, Json, Router};
 use tracing::info;
 
 use crate::{
-    dao::Daos,
     endpoints::{profiles::dto::Profile, users::dao_trait::DynUsersDao},
     error::{ConduitError, ConduitResult},
     extractor::RequiredAuth,
