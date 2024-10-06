@@ -1,3 +1,4 @@
+use std::{collections::HashMap, num::ParseIntError};
 
 use axum::{extract::Path, http::StatusCode, routing::post, Extension, Json, Router};
 use tracing::info;
@@ -63,5 +64,19 @@ impl ProfileRouter {
         let profile_res = ProfileRes { profile };
 
         Ok((StatusCode::OK, Json(profile_res)))
+    }
+
+    #[tracing::instrument(skip(users, profiles))]
+    pub async fn get_profile_by_username(
+        Path(params): Path<HashMap<String, String>>,
+        Extension(users): Extension<DynUsersDao>,
+        Extension(profiles): Extension<DynProfilesDao>,
+    ) -> ConduitResult<(StatusCode, Json<ProfileRes>)> {
+        let user_name = params
+            .get("username")
+            .ok_or(ConduitError::NotFound(String::from("invalid param")))?;
+        info!("received req: get profile by username: {}", user_name);
+
+        todo!()
     }
 }
