@@ -1,4 +1,4 @@
-use std::{collections::HashMap, num::ParseIntError};
+use std::collections::HashMap;
 
 use axum::{
     extract::Path,
