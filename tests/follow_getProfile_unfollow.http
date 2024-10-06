@@ -17,7 +17,17 @@ Content-Type: application/json
     }
 }
 {{
-  $global.token=response.parsedBody.user.token;
+  $global.A_token=response.parsedBody.user.token;
+}}
+
+# test the response body
+{{
+  const {equal} = require('assert');
+  const user = response.parsedBody.user;
+  equal(user.email, `${A_user_email}`);
+  equal(user.username, `${A_username}`);
+  equal(user.bio, "");
+  equal(user.image, null);
 }}
 
 ### Create a B user
@@ -32,10 +42,86 @@ Content-Type: application/json
         "password": "password"
     }
 }
+{{
+  $global.B_token=response.parsedBody.user.token;
+}}
+
+# test the response body
+{{
+  const {equal} = require('assert');
+  const user = response.parsedBody.user;
+  equal(user.email, `${B_user_email}`);
+  equal(user.username, `${B_username}`);
+  equal(user.bio, "");
+  equal(user.image, null);
+}}
 
 
 ### A user follows B user
 POST /profiles/{{B_username}}/follow
 Accept: application/json
-Authorization: Token {{$global.token}}
+Authorization: Token {{$global.A_token}}
 
+# test the response body
+{{
+  const {equal} = require('assert');
+  const profile = response.parsedBody.profile;
+  equal(profile.username, `${B_username}`);
+  equal(profile.following, true);
+}}
+
+
+### Get Profile of B user by A user
+GET /profiles/{{B_username}}
+Accept: application/json
+Authorization: Token {{$global.A_token}}
+
+# test the response body
+{{
+  const {equal} = require('assert');
+  const profile = response.parsedBody.profile;
+  equal(profile.username, `${B_username}`);
+  equal(profile.following, true);
+}}
+
+
+
+
+### Get Profile of A user by B user
+GET /profiles/{{A_username}}
+Accept: application/json
+Authorization: Token {{$global.B_token}}
+
+# test the response body
+{{
+  const {equal} = require('assert');
+  const profile = response.parsedBody.profile;
+  equal(profile.username, `${A_username}`);
+  equal(profile.following, false);
+}}
+
+### Get Profile of B user by unauthenticated user
+GET /profiles/{{B_username}}
+Accept: application/json
+
+# test the response body
+{{
+  const {equal} = require('assert');
+  const profile = response.parsedBody.profile;
+  equal(profile.username, `${B_username}`);
+  equal(profile.following, false);
+}}
+
+### Get Profile of A user by A user
+GET /profiles/{{A_username}}
+Accept: application/json
+Authorization: Token {{$global.A_token}}
+
+# test the response body
+{{
+  const {equal} = require('assert');
+  const profile = response.parsedBody.profile;
+  equal(profile.username, `${A_username}`);
+//   この場合のfollowingはどうあるべきだろうか？
+//   equal(profile.following, false);
+}}
