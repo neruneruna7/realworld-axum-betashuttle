@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            SELECT id, created_at, follower_id, following_id\n            FROM user_follows\n            WHERE follower_id = $1\n            ",
+  "query": "\n            SELECT id, created_at, follower_id, followee_id\n            FROM user_follows\n            WHERE follower_id = $1\n            ",
   "describe": {
     "columns": [
       {
@@ -20,7 +20,7 @@
       },
       {
         "ordinal": 3,
-        "name": "following_id",
+        "name": "followee_id",
         "type_info": "Uuid"
       }
     ],
@@ -36,5 +36,5 @@
       false
     ]
   },
-  "hash": "1537f89af943f57e3d8a0c39fddbcc797a151960f7ec0474744628f11711007a"
+  "hash": "e33f06e1107ee8a7542284d4b34b8d521f59edc2f2bfaf0f729ac3b513b5beb2"
 }
