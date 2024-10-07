@@ -90,11 +90,10 @@ mod tests {
     use crate::{
         dao::users::UserDao,
         endpoints::users::{dao_trait::UsersDaoTrait, dto::NewUser, entity::UserEntity},
-        error::ConduitError,
         services::hash::PasswordHashService,
     };
-    use sqlx::{Error, PgPool};
-    use uuid::Uuid;
+    use sqlx::PgPool;
+    
 
     async fn setup_user_ab(pool: &PgPool) -> (UserEntity, UserEntity) {
         let user_dao = UserDao::new(pool.clone());

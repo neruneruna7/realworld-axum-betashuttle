@@ -123,7 +123,7 @@ impl ProfileRouter {
             .ok_or(ConduitError::NotFound(String::from("invalid param")))?;
 
         info!("received req: unfollow profile: {}", username);
-        let followed_user = users.get_user_by_username(&username).await?;
+        let followed_user = users.get_user_by_username(username).await?;
         let Some(followed_user) = followed_user else {
             return Err(ConduitError::NotFound("user not found".to_string()));
         };
