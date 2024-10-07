@@ -30,7 +30,10 @@ impl ProfileRouter {
 
     pub fn to_router(&self) -> Router {
         Router::new()
-            .route("/profiles/:username/follow", post(Self::follow_user))
+            .route(
+                "/profiles/:username/follow",
+                post(Self::follow_user).delete(Self::unfollow_user),
+            )
             .route("/profiles/:username", get(Self::get_profile_by_username))
             .layer(Extension(self.dyn_users_dao.clone()))
             .layer(Extension(self.dyn_profiles_dao.clone()))
@@ -103,6 +106,47 @@ impl ProfileRouter {
         };
 
         let profile = Profile::from_user_entity(user_entity, is_following);
+        let profile_res = ProfileRes { profile };
+
+        Ok((StatusCode::OK, Json(profile_res)))
+    }
+
+    #[tracing::instrument(skip(users, profiles))]
+    async fn unfollow_user(
+        Path(params): Path<HashMap<String, String>>,
+        Extension(users): Extension<DynUsersDao>,
+        Extension(profiles): Extension<DynProfilesDao>,
+        RequiredAuth(current_user_id): RequiredAuth,
+    ) -> ConduitResult<(StatusCode, Json<ProfileRes>)> {
+        let username = params
+            .get("username")
+            .ok_or(ConduitError::NotFound(String::from("invalid param")))?;
+
+        info!("received req: unfollow profile: {}", username);
+        let followed_user = users.get_user_by_username(username).await?;
+        let Some(followed_user) = followed_user else {
+            return Err(ConduitError::NotFound("user not found".to_string()));
+        };
+
+        let is_following = profiles
+            .get_user_followees(current_user_id)
+            .await?
+            .iter()
+            .any(|f| f.follower_id == current_user_id);
+
+        if is_following {
+            let _ = profiles
+                .unfollow_user(current_user_id, followed_user.id)
+                .await?;
+        } else {
+            return Err(ConduitError::BadRequest("not following".to_string()));
+        }
+
+        info!(
+            "unfollowing: from user_id: {}, to user_id: {}",
+            current_user_id, followed_user.id
+        );
+        let profile = Profile::from_user_entity(followed_user, false);
         let profile_res = ProfileRes { profile };
 
         Ok((StatusCode::OK, Json(profile_res)))

@@ -1,8 +1,8 @@
 @host=http://localhost:8000/api
 @A_user_email={{$random.email()}}
-@A_username={{$random.alphabetic()}}
+@A_username={{"A_" + $random.alphabetic()}}
 @B_user_email={{$random.email()}}
-@B_username={{$random.alphabetic()}}
+@B_username={{"B_" + $random.alphabetic()}}
 
 ### Create a A user
 POST /users
@@ -124,4 +124,27 @@ Authorization: Token {{$global.A_token}}
   equal(profile.username, `${A_username}`);
 //   この場合のfollowingはどうあるべきだろうか？
 //   equal(profile.following, false);
+}}
+
+### Unfollow B user by A user
+DELETE /profiles/{{B_username}}/follow
+Accept: application/json
+Authorization: Token {{$global.A_token}}
+
+# test the response body
+{{
+  const {equal} = require('assert');
+  const profile = response.parsedBody.profile;
+  equal(profile.username, `${B_username}`);
+  equal(profile.following, false);
+}}
+
+### Unfollow Not Authorized
+DELETE /profiles/{{B_username}}/follow
+Accept: application/json
+
+# test the response body
+{{
+  const {equal} = require('assert');
+  equal(response.statusCode, 401);
 }}

@@ -19,6 +19,8 @@ pub enum ConduitError {
     Unauthorized,
     #[error("username or password is invalid")]
     InvalidLogin,
+    #[error("{0}")]
+    BadRequest(String),
     #[error("Internal Server Error")]
     InternalServerError,
     #[error("{0}")]
@@ -58,6 +60,7 @@ impl IntoResponse for ConduitError {
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Self::InternalServerError.to_string(),
             ),
+            Self::BadRequest(e) => (StatusCode::BAD_REQUEST, e),
             Self::JwtError(e) => (StatusCode::UNAUTHORIZED, e.to_string()),
             // DBの操作に失敗した場合 サーバー側の問題
             Self::SqlxError(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()),

@@ -20,4 +20,10 @@ pub trait ProfilesDaoTrait {
         follower_id: Uuid,
         following_id: Uuid,
     ) -> ConduitResult<UserFollowEntity>;
+
+    async fn unfollow_user(
+        &self,
+        follower_id: Uuid,
+        following_id: Uuid,
+    ) -> ConduitResult<UserFollowEntity>;
 }
