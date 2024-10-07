@@ -93,7 +93,6 @@ mod tests {
         services::hash::PasswordHashService,
     };
     use sqlx::PgPool;
-    
 
     async fn setup_user_ab(pool: &PgPool) -> (UserEntity, UserEntity) {
         let user_dao = UserDao::new(pool.clone());
