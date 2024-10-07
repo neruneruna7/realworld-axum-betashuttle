@@ -129,7 +129,7 @@ impl ProfileRouter {
         };
 
         let is_following = profiles
-            .get_user_followees(followed_user.id)
+            .get_user_followees(current_user_id)
             .await?
             .iter()
             .any(|f| f.follower_id == current_user_id);
