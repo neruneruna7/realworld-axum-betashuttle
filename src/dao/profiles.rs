@@ -24,7 +24,7 @@ impl ProfilesDaoTrait for ProfileDao {
         let user_follows = sqlx::query_as!(
             UserFollowEntity,
             r#"
-            SELECT id, created_at, follower_id, following_id
+            SELECT id, created_at, follower_id, followee_id
             FROM user_follows
             WHERE follower_id = $1
             "#,
@@ -39,19 +39,19 @@ impl ProfilesDaoTrait for ProfileDao {
     async fn following_user(
         &self,
         follower_id: Uuid,
-        following_id: Uuid,
+        followee_id: Uuid,
     ) -> ConduitResult<UserFollowEntity> {
         let uuid = Uuid::now_v7();
         let user_follow = sqlx::query_as!(
             UserFollowEntity,
             r#"
-            INSERT INTO user_follows (id, follower_id, following_id)
+            INSERT INTO user_follows (id, follower_id, followee_id)
             VALUES ($1, $2, $3)
-            RETURNING id, created_at, follower_id, following_id
+            RETURNING id, created_at, follower_id, followee_id
             "#,
             uuid,
             follower_id,
-            following_id
+            followee_id
         )
         .fetch_one(&self.pool)
         .await
@@ -62,17 +62,17 @@ impl ProfilesDaoTrait for ProfileDao {
     async fn unfollow_user(
         &self,
         follower_id: Uuid,
-        following_id: Uuid,
+        followee_id: Uuid,
     ) -> ConduitResult<UserFollowEntity> {
         let user_follow = sqlx::query_as!(
             UserFollowEntity,
             r#"
             DELETE FROM user_follows
-            WHERE follower_id = $1 AND following_id = $2
-            RETURNING id, created_at, follower_id, following_id
+            WHERE follower_id = $1 AND followee_id = $2
+            RETURNING id, created_at, follower_id, followee_id
             "#,
             follower_id,
-            following_id
+            followee_id
         )
         .fetch_one(&self.pool)
         .await
