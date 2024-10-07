@@ -58,4 +58,25 @@ impl ProfilesDaoTrait for ProfileDao {
         .context("unexpected error: while inserting user_follow")?;
         Ok(user_follow)
     }
+
+    async fn unfollow_user(
+        &self,
+        follower_id: Uuid,
+        following_id: Uuid,
+    ) -> ConduitResult<UserFollowEntity> {
+        let user_follow = sqlx::query_as!(
+            UserFollowEntity,
+            r#"
+            DELETE FROM user_follows
+            WHERE follower_id = $1 AND following_id = $2
+            RETURNING id, created_at, follower_id, following_id
+            "#,
+            follower_id,
+            following_id
+        )
+        .fetch_one(&self.pool)
+        .await
+        .context("unexpected error: while deleting user_follow")?;
+        Ok(user_follow)
+    }
 }
