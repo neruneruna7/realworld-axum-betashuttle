@@ -83,3 +83,96 @@ impl ProfilesDaoTrait for ProfileDao {
         Ok(user_follow)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{
+        dao::users::UserDao,
+        endpoints::users::{dao_trait::UsersDaoTrait, dto::NewUser, entity::UserEntity},
+        error::ConduitError,
+        services::hash::PasswordHashService,
+    };
+    use sqlx::{Error, PgPool};
+    use uuid::Uuid;
+
+    async fn setup_user_ab(pool: &PgPool) -> (UserEntity, UserEntity) {
+        let user_dao = UserDao::new(pool.clone());
+        // テスト用のユーザーAとBを作成
+        let new_a_user = NewUser {
+            username: Some("test_user_a".to_string()),
+            email: Some("test@example.com".to_string()),
+            password: Some("password".to_string()),
+        };
+        let new_a_user = PasswordHashService::hash_password_newuser(new_a_user).unwrap();
+        let user_a = user_dao.create_user(new_a_user).await.unwrap();
+
+        let new_b_user = NewUser {
+            username: Some("test_user_b".to_string()),
+            email: Some("testb@eexample.com".to_string()),
+            password: Some("password".to_string()),
+        };
+        let new_b_user = PasswordHashService::hash_password_newuser(new_b_user).unwrap();
+        let user_b = user_dao.create_user(new_b_user).await.unwrap();
+        (user_a, user_b)
+    }
+
+    #[sqlx::test]
+    async fn test_following_user(pool: PgPool) {
+        // テスト用のユーザーAとBを作成
+        let (user_a, user_b) = setup_user_ab(&pool).await;
+
+        // ユーザーAがユーザーBをフォローする
+        let profile_dao = ProfileDao::new(pool.clone());
+        let user_follow = profile_dao
+            .following_user(user_a.id, user_b.id)
+            .await
+            .unwrap();
+        assert_eq!(user_follow.follower_id, user_a.id);
+        assert_eq!(user_follow.followee_id, user_b.id);
+    }
+
+    #[sqlx::test]
+    async fn test_unfollow_user(pool: PgPool) {
+        // テスト用のユーザーAとBを作成
+        let (user_a, user_b) = setup_user_ab(&pool).await;
+
+        // ユーザーAがユーザーBをフォローする
+        let profile_dao = ProfileDao::new(pool.clone());
+        let user_follow = profile_dao
+            .following_user(user_a.id, user_b.id)
+            .await
+            .unwrap();
+        assert_eq!(user_follow.follower_id, user_a.id);
+        assert_eq!(user_follow.followee_id, user_b.id);
+
+        // ユーザーAがユーザーBのフォローを解除する
+        let user_follow = profile_dao
+            .unfollow_user(user_a.id, user_b.id)
+            .await
+            .unwrap();
+        assert_eq!(user_follow.follower_id, user_a.id);
+        assert_eq!(user_follow.followee_id, user_b.id);
+    }
+
+    #[sqlx::test]
+    async fn test_get_user_followees(pool: PgPool) {
+        // テスト用のユーザーAとBを作成
+        let (user_a, user_b) = setup_user_ab(&pool).await;
+
+        // ユーザーAがユーザーBをフォローする
+        let profile_dao = ProfileDao::new(pool.clone());
+        let user_follow = profile_dao
+            .following_user(user_a.id, user_b.id)
+            .await
+            .unwrap();
+        assert_eq!(user_follow.follower_id, user_a.id);
+        assert_eq!(user_follow.followee_id, user_b.id);
+
+        // ユーザーAがフォローしているユーザーを取得
+        let user_follows = profile_dao.get_user_followees(user_a.id).await.unwrap();
+        assert_eq!(user_follows.len(), 1);
+        assert_eq!(user_follows[0].follower_id, user_a.id);
+        assert_eq!(user_follows[0].followee_id, user_b.id);
+    }
+}
