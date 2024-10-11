@@ -5,6 +5,7 @@ script = """
 sqlx mig revert
 sqlx mig revert
 sqlx mig revert
+sqlx mig revert
 sqlx mig run
 """
 
@@ -12,11 +13,13 @@ sqlx mig run
 [tasks.apitest]
 description = "Run API tests"
 script = """
-echo "user create get update login"
+echo "user create get update login: ユーザー"
 httpyac -a ./tests/user_create_get_update_login.http
-echo "user create get update with password login"
+echo "user create get update with password login: ユーザー パスワードも更新"
 httpyac -a ./tests/user_create_get_update-with-password_login.http
-echo "Follow"
+echo "Follow: フォロー"
 httpyac -a ./tests/follow_getProfile_unfollow.http
+echo "Article: 記事"
+httpyac -a ./tests/articles.http
 """
 dependencies = ["dbreset"]
