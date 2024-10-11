@@ -12,7 +12,7 @@ use axum_macros::debug_handler;
 
 use crate::{
     error::{ConduitError, ConduitResult},
-    extractor::{RequiredAuth, ValidationExtractot},
+    extractor::{RequiredAuth, ValidationExtractor},
     services::{hash::PasswordHashService, jwt::JwtService},
     ArcState,
 };
@@ -49,7 +49,7 @@ impl UserRouter {
     pub async fn register_user(
         Extension(state): Extension<ArcState>,
         Extension(user_dao): Extension<DynUsersDao>,
-        ValidationExtractot(req): ValidationExtractot<RegisterUserReq>,
+        ValidationExtractor(req): ValidationExtractor<RegisterUserReq>,
     ) -> ConduitResult<(StatusCode, Json<RegisterUserRes>)> {
         let req = req.user;
 
@@ -99,7 +99,7 @@ impl UserRouter {
     pub async fn login_user(
         Extension(state): Extension<ArcState>,
         Extension(user_dao): Extension<DynUsersDao>,
-        ValidationExtractot(req): ValidationExtractot<LoginUserReq>,
+        ValidationExtractor(req): ValidationExtractor<LoginUserReq>,
     ) -> ConduitResult<(StatusCode, Json<LoginUserRes>)> {
         let req = req.user;
 
@@ -142,7 +142,7 @@ impl UserRouter {
         Extension(user_dao): Extension<DynUsersDao>,
         // Request本文を消費するエキストラクターは1つのみかつ引数の最後でなければならない
         // https://docs.rs/axum/0.7.6/axum/extract/index.html
-        ValidationExtractot(req): ValidationExtractot<UpdateUserReq>,
+        ValidationExtractor(req): ValidationExtractor<UpdateUserReq>,
     ) -> ConduitResult<(StatusCode, Json<UpdateUserRes>)> {
         let req = req.user;
         // Noneのフィールドを更新しないようにする

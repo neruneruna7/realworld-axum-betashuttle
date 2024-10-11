@@ -12,7 +12,7 @@ use validator::Validate;
 use crate::{error::ConduitError, services::jwt::JwtService, ArcState};
 
 #[derive(Debug, Clone)]
-pub struct ValidationExtractot<T>(pub T);
+pub struct ValidationExtractor<T>(pub T);
 
 // #[async_trait]
 // impl<S, T> FromRequestParts<S> for ValidationExtractot<T>
@@ -31,7 +31,7 @@ pub struct ValidationExtractot<T>(pub T);
 // }
 
 #[async_trait]
-impl<S, T> FromRequest<S> for ValidationExtractot<T>
+impl<S, T> FromRequest<S> for ValidationExtractor<T>
 where
     T: DeserializeOwned + Validate,
     S: Send + Sync,
@@ -46,7 +46,7 @@ where
     async fn from_request(req: Request, state: &S) -> Result<Self, Self::Rejection> {
         let Json(value) = Json::<T>::from_request(req, state).await?;
         value.validate()?;
-        Ok(ValidationExtractot(value))
+        Ok(ValidationExtractor(value))
     }
 }
 

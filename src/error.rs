@@ -45,6 +45,8 @@ pub enum ConduitError {
     AxumExtensionRejection(#[from] ExtensionRejection),
     #[error(transparent)]
     AnyhowError(#[from] anyhow::Error),
+    #[error("{0}")]
+    Conflict(String),
 }
 
 impl IntoResponse for ConduitError {
@@ -60,6 +62,7 @@ impl IntoResponse for ConduitError {
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Self::InternalServerError.to_string(),
             ),
+            Self::Conflict(e) => (StatusCode::CONFLICT, e),
             Self::BadRequest(e) => (StatusCode::BAD_REQUEST, e),
             Self::JwtError(e) => (StatusCode::UNAUTHORIZED, e.to_string()),
             // DBの操作に失敗した場合 サーバー側の問題

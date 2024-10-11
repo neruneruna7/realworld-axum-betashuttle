@@ -1,0 +1,63 @@
+@host=http://localhost:8000/api
+@new_user_email={{$random.email()}}
+@new_username={{$random.alphabetic()}}
+@updated_user_email={{$random.email()}}
+@updated_username={{$random.alphabetic()}}
+### Create a new user
+POST /users
+Accept: application/json
+Content-Type: application/json
+
+{
+  "user": {
+    "username": "{{new_username}}",
+    "email": "{{new_user_email}}",
+    "password": "password"
+  }
+}
+
+# Extract token from response
+# and test the response body
+{{
+  $global.token=response.parsedBody.user.token;
+  const {equal} = require('assert');
+  const user = response.parsedBody.user;
+  equal(user.email, `${new_user_email}`);
+  equal(user.username, `${new_username}`);
+  equal(user.bio, "");
+  equal(user.image, null);
+}}
+
+### 記事作成
+POST /articles
+Accept: application/json
+Content-Type: application/json
+Authorization: Token {{$global.token}}
+
+{
+  "article": {
+    "title": "かゆうま",
+    "description": "かゆうま",
+    "body": "かゆい，うま",
+    "tagList": ["かゆうま", "かゆい", "うま"]
+  }
+}
+
+# Extract slug from response
+{{
+  $global.slug=response.parsedBody.article.slug;
+}}
+
+# test the response body
+{{
+  const {equal} = require('assert');
+  const article = response.parsedBody.article;
+  equal(article.title, "かゆうま");
+  equal(article.description, "かゆうま");
+  equal(article.body, "かゆい，うま");
+  // いまはまだタグ機能が実装されていないのでコメントアウト
+  // equal(article.tagList, ["かゆうま", "かゆい", "うま"]);
+  equal(article.author.username, `${new_username}`);
+  equal(article.author.bio, "");
+  equal(article.author.image, null);
+}}
