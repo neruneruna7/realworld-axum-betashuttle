@@ -11,12 +11,27 @@ use super::entity::ArticleEntity;
 
 pub type DynArticlesDao = Arc<dyn ArticlesDaoTrait + Send + Sync>;
 
+#[derive(Debug, Clone)]
+pub struct CreatArticle {
+    pub article: NewArticleValidated,
+    pub author_id: Uuid,
+    pub slug: String,
+}
+
+impl CreatArticle {
+    pub fn new(article: NewArticleValidated, author_id: Uuid, slug: String) -> Self {
+        Self {
+            article,
+            author_id,
+            slug,
+        }
+    }
+}
 #[cfg_attr(test, mockall::automock)]
 #[async_trait]
 pub trait ArticlesDaoTrait {
     async fn create_article(
         &self,
-        article: NewArticleValidated,
-        author_id: Uuid,
-    ) -> Result<ArticleEntity, ConduitError>;
+        create_article: CreatArticle,
+    ) -> Result<Option<ArticleEntity>, ConduitError>;
 }

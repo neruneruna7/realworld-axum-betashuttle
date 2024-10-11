@@ -1,9 +1,10 @@
 use axum::{http::StatusCode, routing::post, Extension, Json, Router};
 use axum_macros::debug_handler;
 use slug::slugify;
+use tracing::info;
 
 use crate::{
-    endpoints::articles::dto::NewArticleValidated,
+    endpoints::articles::{dao_trait::CreatArticle, dto::NewArticleValidated},
     error::ConduitResult,
     extractor::{RequiredAuth, ValidationExtractot},
     ArcState,
@@ -25,8 +26,8 @@ impl ArticleRouter {
 
     pub fn to_router(&self) -> Router {
         Router::new()
-            .route("/articles", post(Self::create_article))
-            .layer(Extension(self.article_dao.clone()))
+        // .route("/articles", post(Self::create_article))
+        // .layer(Extension(self.article_dao.clone()))
     }
 
     #[tracing::instrument(skip_all)]
@@ -36,11 +37,14 @@ impl ArticleRouter {
         Extension(article_dto): Extension<DynArticlesDao>,
         ValidationExtractot(req): ValidationExtractot<CreateArticleReq>,
     ) -> ConduitResult<(StatusCode, Json<CreateArticleRes>)> {
-        let new_article = req.article;
-        let new_article = new_article.into_validated();
-        let slug = slugify(new_article.title.unwrap().as_str());
+        info!("create_article");
 
-        let article = article_dto.create_article(new_article, user_id).await?;
+        let new_article = req.article.into_validated();
+
+        let slug = slugify(new_article.title.as_str());
+
+        let create_article = CreatArticle::new(new_article, user_id, slug);
+        let article = article_dto.create_article(create_article).await?;
 
         // Ok((StatusCode::CREATED, Json(CreateArticleRes { article })))
         todo!()
