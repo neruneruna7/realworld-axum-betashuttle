@@ -1,12 +1,10 @@
 use anyhow::Context as _;
 use axum::async_trait;
 use sqlx::PgPool;
-use uuid::Uuid;
 
 use crate::{
     endpoints::articles::{
         dao_trait::{ArticlesDaoTrait, CreatArticle},
-        dto::{Article, NewArticle, NewArticleValidated},
         entity::ArticleEntity,
     },
     error::ConduitError,
@@ -56,11 +54,8 @@ mod tests {
     use crate::{
         dao::users::UserDao,
         endpoints::{
-            articles::dao_trait::ArticlesDaoTrait,
-            users::{
-                dao_trait::UsersDaoTrait as _,
-                dto::{NewUser, PasswdHashedNewUser},
-            },
+            articles::{dao_trait::ArticlesDaoTrait, dto::NewArticleValidated},
+            users::{dao_trait::UsersDaoTrait as _, dto::PasswdHashedNewUser},
         },
     };
 

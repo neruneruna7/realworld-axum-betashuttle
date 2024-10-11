@@ -1,20 +1,15 @@
 use axum::{http::StatusCode, routing::post, Extension, Json, Router};
-use axum_macros::debug_handler;
 use slug::slugify;
 use tracing::info;
 
 use crate::{
     endpoints::{
-        articles::{
-            dao_trait::CreatArticle,
-            dto::{Article, NewArticleValidated},
-        },
+        articles::{dao_trait::CreatArticle, dto::Article},
         profiles::dto::Profile,
         users::dao_trait::DynUsersDao,
     },
     error::{ConduitError, ConduitResult},
     extractor::{RequiredAuth, ValidationExtractot},
-    ArcState,
 };
 
 use super::{

@@ -1,7 +1,5 @@
 use std::sync::Arc;
 
-use crate::endpoints::articles::dto::Article;
-use crate::endpoints::articles::dto::NewArticle;
 use crate::error::ConduitError;
 use axum::async_trait;
 use uuid::Uuid;
