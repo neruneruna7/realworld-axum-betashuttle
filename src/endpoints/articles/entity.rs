@@ -7,6 +7,7 @@ pub struct ArticleEntity {
     pub created_at: PrimitiveDateTime,
     pub updated_at: PrimitiveDateTime,
     pub title: String,
+    pub slug: String,
     pub description: String,
     pub body: String,
     pub author_id: Uuid,

@@ -29,6 +29,7 @@ impl CreatArticle {
 }
 #[cfg_attr(test, mockall::automock)]
 #[async_trait]
+/// slugがコンフリクトした場合はNoneを返す
 pub trait ArticlesDaoTrait {
     async fn create_article(
         &self,
