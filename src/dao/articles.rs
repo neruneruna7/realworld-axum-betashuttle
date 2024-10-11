@@ -6,7 +6,7 @@ use uuid::Uuid;
 use crate::{
     endpoints::articles::{
         dao_trait::ArticlesDaoTrait,
-        dto::{Article, NewArticle},
+        dto::{Article, NewArticle, NewArticleValidated},
         entity::ArticleEntity,
     },
     error::ConduitError,
@@ -27,7 +27,7 @@ impl ArticlesDao {
 impl ArticlesDaoTrait for ArticlesDao {
     async fn create_article(
         &self,
-        article: NewArticle,
+        article: NewArticleValidated,
         author_id: Uuid,
     ) -> Result<ArticleEntity, ConduitError> {
         let article = sqlx::query_as!(

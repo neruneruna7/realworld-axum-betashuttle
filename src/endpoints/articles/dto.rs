@@ -15,6 +15,25 @@ pub struct NewArticle {
     pub tag_list: Option<Vec<String>>,
 }
 
+impl NewArticle {
+    pub fn into_validated(self) -> NewArticleValidated {
+        NewArticleValidated {
+            title: self.title.unwrap(),
+            description: self.description.unwrap(),
+            body: self.body.unwrap(),
+            tag_list: self.tag_list.unwrap_or_default(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Validate, Deserialize)]
+pub struct NewArticleValidated {
+    pub title: String,
+    pub description: String,
+    pub body: String,
+    pub tag_list: Vec<String>,
+}
+
 #[derive(Debug, Clone, Validate, Deserialize)]
 pub struct CreateArticleReq {
     #[validate(nested)]

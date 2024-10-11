@@ -6,6 +6,7 @@ use crate::error::ConduitError;
 use axum::async_trait;
 use uuid::Uuid;
 
+use super::dto::NewArticleValidated;
 use super::entity::ArticleEntity;
 
 pub type DynArticlesDao = Arc<dyn ArticlesDaoTrait + Send + Sync>;
@@ -15,7 +16,7 @@ pub type DynArticlesDao = Arc<dyn ArticlesDaoTrait + Send + Sync>;
 pub trait ArticlesDaoTrait {
     async fn create_article(
         &self,
-        article: NewArticle,
+        article: NewArticleValidated,
         author_id: Uuid,
     ) -> Result<ArticleEntity, ConduitError>;
 }

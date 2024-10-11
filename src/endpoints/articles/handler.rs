@@ -1,7 +1,9 @@
 use axum::{http::StatusCode, routing::post, Extension, Json, Router};
 use axum_macros::debug_handler;
+use slug::slugify;
 
 use crate::{
+    endpoints::articles::dto::NewArticleValidated,
     error::ConduitResult,
     extractor::{RequiredAuth, ValidationExtractot},
     ArcState,
@@ -31,9 +33,16 @@ impl ArticleRouter {
     // #[debug_handler]
     pub async fn create_article(
         RequiredAuth(user_id): RequiredAuth,
-        Extension(dyn_article_dto): Extension<DynArticlesDao>,
+        Extension(article_dto): Extension<DynArticlesDao>,
         ValidationExtractot(req): ValidationExtractot<CreateArticleReq>,
     ) -> ConduitResult<(StatusCode, Json<CreateArticleRes>)> {
+        let new_article = req.article;
+        let new_article = new_article.into_validated();
+        let slug = slugify(new_article.title.unwrap().as_str());
+
+        let article = article_dto.create_article(new_article, user_id).await?;
+
+        // Ok((StatusCode::CREATED, Json(CreateArticleRes { article })))
         todo!()
     }
 }
