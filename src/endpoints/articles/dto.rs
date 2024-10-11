@@ -40,3 +40,7 @@ pub struct Article {
     pub favorites_count: i32,
     pub author: Profile,
 }
+
+pub struct CreateArticleRes {
+    pub article: Article,
+}
