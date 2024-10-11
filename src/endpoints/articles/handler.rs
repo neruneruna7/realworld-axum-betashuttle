@@ -24,17 +24,22 @@ use super::{
 
 pub struct ArticleRouter {
     article_dao: DynArticlesDao,
+    user_dao: DynUsersDao,
 }
 
 impl ArticleRouter {
-    pub fn new(article_dao: DynArticlesDao) -> Self {
-        Self { article_dao }
+    pub fn new(article_dao: DynArticlesDao, user_dao: DynUsersDao) -> Self {
+        Self {
+            article_dao,
+            user_dao,
+        }
     }
 
     pub fn to_router(&self) -> Router {
         Router::new()
-        // .route("/articles", post(Self::create_article))
-        // .layer(Extension(self.article_dao.clone()))
+            .route("/articles", post(Self::create_article))
+            .layer(Extension(self.article_dao.clone()))
+            .layer(Extension(self.user_dao.clone()))
     }
 
     #[tracing::instrument(skip_all)]
