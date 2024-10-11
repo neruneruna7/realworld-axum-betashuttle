@@ -9,7 +9,7 @@ use crate::{
         users::dao_trait::DynUsersDao,
     },
     error::{ConduitError, ConduitResult},
-    extractor::{RequiredAuth, ValidationExtractot},
+    extractor::{RequiredAuth, ValidationExtractor},
 };
 
 use super::{
@@ -43,7 +43,7 @@ impl ArticleRouter {
         RequiredAuth(user_id): RequiredAuth,
         Extension(user_dao): Extension<DynUsersDao>,
         Extension(article_dao): Extension<DynArticlesDao>,
-        ValidationExtractot(req): ValidationExtractot<CreateArticleReq>,
+        ValidationExtractor(req): ValidationExtractor<CreateArticleReq>,
     ) -> ConduitResult<(StatusCode, Json<CreateArticleRes>)> {
         info!("create_article");
 
