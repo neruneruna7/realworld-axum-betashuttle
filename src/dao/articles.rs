@@ -35,7 +35,7 @@ impl ArticlesDaoTrait for ArticlesDao {
             INSERT INTO articles (author_id, title, description, body, slug)
             VALUES ($1, $2, $3, $4, $5)
             ON CONFLICT DO NOTHING
-            RETURNING id, author_id, title, description, body, created_at, updated_at
+            RETURNING id, author_id, title, slug, description, body, created_at, updated_at
             "#,
             create_article.author_id,
             create_article.article.title,
