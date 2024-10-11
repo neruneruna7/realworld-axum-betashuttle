@@ -1,6 +1,7 @@
 use sqlx::PgPool;
 use users::UserDao;
 
+pub mod articles;
 pub mod profiles;
 pub mod users;
 
