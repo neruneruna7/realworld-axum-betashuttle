@@ -60,6 +60,7 @@ pub struct Article {
     pub author: Profile,
 }
 
+#[derive(Debug, Clone, Serialize)]
 pub struct CreateArticleRes {
     pub article: Article,
 }
