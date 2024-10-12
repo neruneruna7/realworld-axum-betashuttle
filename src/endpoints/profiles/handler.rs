@@ -9,12 +9,16 @@ use axum::{
 use tracing::info;
 
 use crate::{
-    endpoints::{profiles::dto::Profile, users::dao_trait::DynUsersDao},
+    core::{
+        profiles::{
+            dao_trait::DynProfilesDao,
+            dto::{Profile, ProfileRes},
+        },
+        users::dao_trait::DynUsersDao,
+    },
     error::{ConduitError, ConduitResult},
     extractor::{OptionalAuth, RequiredAuth},
 };
-
-use super::{dao_trait::DynProfilesDao, dto::ProfileRes};
 
 pub struct ProfileRouter {
     dyn_users_dao: DynUsersDao,

@@ -1,5 +1,5 @@
 use crate::{
-    endpoints::profiles::{dao_trait::ProfilesDaoTrait, entity::UserFollowEntity},
+    core::profiles::{dao_trait::ProfilesDaoTrait, entity::UserFollowEntity},
     error::ConduitResult,
 };
 use anyhow::Context as _;
@@ -88,8 +88,8 @@ impl ProfilesDaoTrait for ProfileDao {
 mod tests {
     use super::*;
     use crate::{
+        core::users::{dao_trait::UsersDaoTrait, dto::NewUser, entity::UserEntity},
         dao::users::UserDao,
-        endpoints::users::{dao_trait::UsersDaoTrait, dto::NewUser, entity::UserEntity},
         services::hash::PasswordHashService,
     };
     use sqlx::PgPool;

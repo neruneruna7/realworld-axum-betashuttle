@@ -1,9 +1,7 @@
 use std::sync::Arc;
 
-use crate::{
-    endpoints::users::{dto::PasswdHashedNewUser, entity::UserEntity},
-    error::ConduitResult,
-};
+use super::{dto::PasswdHashedNewUser, entity::UserEntity};
+use crate::error::ConduitResult;
 use axum::async_trait;
 use uuid::Uuid;
 

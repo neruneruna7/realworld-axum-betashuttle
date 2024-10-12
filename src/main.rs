@@ -2,11 +2,14 @@ use std::sync::Arc;
 
 use axum::{routing::get, Extension, Router};
 use realworld_axum_betashuttle::{
+    core::{
+        articles::dao_trait::DynArticlesDao, profiles::dao_trait::DynProfilesDao,
+        users::dao_trait::DynUsersDao,
+    },
     dao::Daos,
     endpoints::{
-        articles::{dao_trait::DynArticlesDao, handler::ArticleRouter},
-        profiles::{dao_trait::DynProfilesDao, handler::ProfileRouter},
-        users::{dao_trait::DynUsersDao, handler::UserRouter},
+        articles::handler::ArticleRouter, profiles::handler::ProfileRouter,
+        users::handler::UserRouter,
     },
     AppState,
 };

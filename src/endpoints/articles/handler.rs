@@ -3,18 +3,16 @@ use slug::slugify;
 use tracing::info;
 
 use crate::{
-    endpoints::{
-        articles::{dao_trait::CreatArticle, dto::Article},
+    core::{
+        articles::{
+            dao_trait::{CreatArticle, DynArticlesDao},
+            dto::{Article, CreateArticleReq, CreateArticleRes},
+        },
         profiles::dto::Profile,
         users::dao_trait::DynUsersDao,
     },
     error::{ConduitError, ConduitResult},
     extractor::{RequiredAuth, ValidationExtractor},
-};
-
-use super::{
-    dao_trait::DynArticlesDao,
-    dto::{CreateArticleReq, CreateArticleRes},
 };
 
 pub struct ArticleRouter {

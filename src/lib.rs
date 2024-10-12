@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use sqlx::PgPool;
 
+pub mod core;
 pub mod dao;
 pub mod endpoints;
 pub mod error;

@@ -3,7 +3,7 @@ use axum::async_trait;
 use sqlx::PgPool;
 
 use crate::{
-    endpoints::articles::{
+    core::articles::{
         dao_trait::{ArticlesDaoTrait, CreatArticle},
         entity::ArticleEntity,
     },
@@ -52,11 +52,11 @@ impl ArticlesDaoTrait for ArticlesDao {
 mod tests {
     use super::*;
     use crate::{
-        dao::users::UserDao,
-        endpoints::{
+        core::{
             articles::{dao_trait::ArticlesDaoTrait, dto::NewArticleValidated},
             users::{dao_trait::UsersDaoTrait as _, dto::PasswdHashedNewUser},
         },
+        dao::users::UserDao,
     };
 
     #[sqlx::test]

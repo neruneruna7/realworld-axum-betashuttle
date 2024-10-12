@@ -11,18 +11,17 @@ use tracing::info;
 use axum_macros::debug_handler;
 
 use crate::{
+    core::users::{
+        dao_trait::DynUsersDao,
+        dto::{
+            GetUserRes, LoginUserReq, LoginUserRes, RegisterUserReq, RegisterUserRes,
+            UpdateUserReq, UpdateUserRes,
+        },
+    },
     error::{ConduitError, ConduitResult},
     extractor::{RequiredAuth, ValidationExtractor},
     services::{hash::PasswordHashService, jwt::JwtService},
     ArcState,
-};
-
-use super::{
-    dao_trait::DynUsersDao,
-    dto::{
-        GetUserRes, LoginUserReq, LoginUserRes, RegisterUserReq, RegisterUserRes, UpdateUserReq,
-        UpdateUserRes,
-    },
 };
 
 pub struct UserRouter {

@@ -1,5 +1,5 @@
 use crate::{
-    endpoints::users::{dao_trait::UsersDaoTrait, dto::PasswdHashedNewUser, entity::UserEntity},
+    core::users::{dao_trait::UsersDaoTrait, dto::PasswdHashedNewUser, entity::UserEntity},
     error::ConduitResult,
 };
 use anyhow::Context as _;
@@ -119,7 +119,7 @@ impl UsersDaoTrait for UserDao {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::endpoints::users::entity::UserEntity;
+    use crate::core::users::entity::UserEntity;
     use sqlx::PgPool;
 
     #[sqlx::test()]
