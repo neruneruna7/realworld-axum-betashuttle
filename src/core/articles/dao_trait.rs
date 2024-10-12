@@ -7,6 +7,10 @@ use uuid::Uuid;
 use super::dto::NewArticleValidated;
 use super::entity::ArticleEntity;
 
+// トレイトオブジェクトとしつつ関連型を使うため，<Connection = ()>を書いている
+// これが正しく動くのかわからん
+// 実験しよう
+// pub type DynArticlesDao = Arc<dyn ArticlesDaoTrait<Connection = ()> + Send + Sync>;
 pub type DynArticlesDao = Arc<dyn ArticlesDaoTrait + Send + Sync>;
 
 #[derive(Debug, Clone)]
@@ -25,12 +29,16 @@ impl CreatArticle {
         }
     }
 }
-#[cfg_attr(test, mockall::automock)]
+// #[cfg_attr(test, mockall::automock)]
 #[async_trait]
 /// slugがコンフリクトした場合はNoneを返す
 pub trait ArticlesDaoTrait {
+    // トランザクションを使えるようにするため，引数としてコネクションを取る
+    // コネクションの型は実装時に決定し，かつ1つに定まるため，関連型として定義
+    // type Connection;
     async fn create_article(
         &self,
+        // conn: Self::Connection,
         create_article: CreatArticle,
     ) -> Result<Option<ArticleEntity>, ConduitError>;
 }

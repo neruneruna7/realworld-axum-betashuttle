@@ -12,3 +12,14 @@ pub struct ArticleEntity {
     pub body: String,
     pub author_id: Uuid,
 }
+
+pub struct GetArticleQuery {
+    pub id: i32,
+    pub title: String,
+    pub slug: String,
+    pub description: String,
+    pub body: String,
+    pub created_at: PrimitiveDateTime,
+    pub updated_at: PrimitiveDateTime,
+    pub author_id: Uuid,
+}
