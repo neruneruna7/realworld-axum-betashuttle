@@ -3,6 +3,7 @@ use users::UserDao;
 
 pub mod articles;
 pub mod profiles;
+pub mod tags;
 pub mod users;
 
 #[derive(Clone)]
