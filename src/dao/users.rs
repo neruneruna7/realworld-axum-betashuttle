@@ -4,30 +4,22 @@ use crate::{
 };
 use anyhow::Context as _;
 use axum::async_trait;
+use sqlx::Executor;
 use uuid::Uuid;
 
-#[derive(Clone)]
-pub struct UserDao {
-    pool: sqlx::PgPool,
-}
-
-impl UserDao {
-    pub fn new(pool: sqlx::PgPool) -> Self {
-        Self { pool }
-    }
-}
+use super::db_client::DbClient;
 
 #[async_trait]
-impl UsersDaoTrait for UserDao {
+impl UsersDaoTrait for DbClient {
     /// パスワードをハッシュ化しないまま値を渡さないでください
     async fn create_user(
-        &self,
+        &mut self,
         user_hashed_password: PasswdHashedNewUser,
     ) -> ConduitResult<UserEntity> {
         // UUIDを生成する
         let uuid = Uuid::now_v7();
 
-        let user = sqlx::query_as!(
+        let query = sqlx::query_as!(
             UserEntity,
             r#"
             INSERT INTO users (id, username, email, password)
@@ -38,15 +30,19 @@ impl UsersDaoTrait for UserDao {
             user_hashed_password.username,
             user_hashed_password.email,
             user_hashed_password.password
-        )
-        .fetch_one(&self.pool)
-        .await
-        .context("unexpected error: while inserting user")?;
+        );
+
+        // トランザクションがSomeの場合はトランザクションを使う
+        let user = self
+            .execute_query(query)
+            .await
+            .context("unexpected error: while inserting user")?;
+
         Ok(user)
     }
 
-    async fn get_user_by_id(&self, user_id: Uuid) -> ConduitResult<UserEntity> {
-        let user = sqlx::query_as!(
+    async fn get_user_by_id(&mut self, user_id: Uuid) -> ConduitResult<UserEntity> {
+        let query = sqlx::query_as!(
             UserEntity,
             r#"
             SELECT *
@@ -54,15 +50,16 @@ impl UsersDaoTrait for UserDao {
             WHERE id = $1
             "#,
             user_id
-        )
-        .fetch_one(&self.pool)
-        .await
-        .context("user not found")?;
+        );
+        let user = self
+            .execute_query(query)
+            .await
+            .context("unexpected error: while fetching user")?;
         Ok(user)
     }
 
-    async fn get_user_by_email(&self, email: &str) -> ConduitResult<Option<UserEntity>> {
-        let user = sqlx::query_as!(
+    async fn get_user_by_email(&mut self, email: &str) -> ConduitResult<Option<UserEntity>> {
+        let query = sqlx::query_as!(
             UserEntity,
             r#"
             SELECT *
@@ -70,15 +67,16 @@ impl UsersDaoTrait for UserDao {
             WHERE email = $1
             "#,
             email
-        )
-        .fetch_optional(&self.pool)
-        .await
-        .context("unexpected error: while querying for user by email")?;
+        );
+        let user = self
+            .execute_query_optional(query)
+            .await
+            .context("unexpected error: while querying for user by email")?;
         Ok(user)
     }
 
-    async fn get_user_by_username(&self, username: &str) -> ConduitResult<Option<UserEntity>> {
-        let user = sqlx::query_as!(
+    async fn get_user_by_username(&mut self, username: &str) -> ConduitResult<Option<UserEntity>> {
+        let query = sqlx::query_as!(
             UserEntity,
             r#"
             SELECT *
@@ -86,15 +84,16 @@ impl UsersDaoTrait for UserDao {
             WHERE username = $1
             "#,
             username
-        )
-        .fetch_optional(&self.pool)
-        .await
-        .context("unexpected error: while querying for user by username")?;
+        );
+        let user = self
+            .execute_query_optional(query)
+            .await
+            .context("unexpected error: while querying for user by username")?;
         Ok(user)
     }
 
-    async fn update_user(&self, user: UserEntity) -> ConduitResult<UserEntity> {
-        let user = sqlx::query_as!(
+    async fn update_user(&mut self, user: UserEntity) -> ConduitResult<UserEntity> {
+        let q = sqlx::query_as!(
             UserEntity,
             r#"
             UPDATE users
@@ -108,10 +107,8 @@ impl UsersDaoTrait for UserDao {
             user.image,
             user.password,
             user.id
-        )
-        .fetch_one(&self.pool)
-        .await
-        .context("failed: user update")?;
+        );
+        let user = self.execute_query(q).await.context("failed: user update")?;
         Ok(user)
     }
 }
@@ -129,7 +126,7 @@ mod tests {
             password: "password".to_string(),
             username: "test".to_string(),
         };
-        let dao = UserDao::new(pool);
+        let mut dao = DbClient::new(pool);
         let user = dao.create_user(new_user.clone()).await.unwrap();
         let test_user = UserEntity {
             id: user.id,
@@ -151,7 +148,7 @@ mod tests {
             password: "password".to_string(),
             username: "userid_get_test".to_string(),
         };
-        let dao = UserDao::new(pool);
+        let mut dao = DbClient::new(pool);
         let user = dao.create_user(new_user.clone()).await.unwrap();
         let get_user = dao.get_user_by_id(user.id).await.unwrap();
 
@@ -165,7 +162,7 @@ mod tests {
             password: "password".to_string(),
             username: "email_get_test".to_string(),
         };
-        let dao = UserDao::new(pool);
+        let mut dao = DbClient::new(pool);
         let user = dao.create_user(new_user.clone()).await.unwrap();
         let get_user = dao.get_user_by_email(&new_user.email).await.unwrap();
         assert_eq!(user, get_user.unwrap());
