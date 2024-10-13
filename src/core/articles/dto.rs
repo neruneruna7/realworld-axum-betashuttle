@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
-use crate::endpoints::profiles::dto::Profile;
+use super::super::profiles::dto::Profile;
 
 #[derive(Debug, Clone, Validate, Deserialize, PartialEq)]
 pub struct NewArticle {
@@ -62,5 +62,10 @@ pub struct Article {
 
 #[derive(Debug, Clone, Serialize)]
 pub struct CreateArticleRes {
+    pub article: Article,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct GetArticleRes {
     pub article: Article,
 }

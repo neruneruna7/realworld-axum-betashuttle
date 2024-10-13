@@ -1,7 +1,6 @@
 use serde::Serialize;
 
-use crate::endpoints::users::entity::UserEntity;
-
+use super::super::users::entity::UserEntity;
 #[derive(Debug, Default, Serialize, PartialEq, Clone)]
 pub struct Profile {
     pub username: String,

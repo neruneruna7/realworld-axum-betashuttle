@@ -33,4 +33,5 @@ pub trait ArticlesDaoTrait {
         &self,
         create_article: CreatArticle,
     ) -> Result<Option<ArticleEntity>, ConduitError>;
+    async fn get_article_by_slug(&self, slug: &str) -> Result<Option<ArticleEntity>, ConduitError>;
 }

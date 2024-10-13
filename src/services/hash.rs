@@ -4,7 +4,7 @@ use argon2::{
 };
 
 use crate::{
-    endpoints::users::{
+    core::users::{
         dto::{NewUser, PasswdHashedNewUser},
         entity::UserEntity,
     },
@@ -65,7 +65,6 @@ impl PasswordHashService {
 
 #[cfg(test)]
 mod tests {
-    
 
     use super::*;
 
