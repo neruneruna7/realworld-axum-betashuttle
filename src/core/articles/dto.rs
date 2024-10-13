@@ -69,3 +69,24 @@ pub struct CreateArticleRes {
 pub struct GetArticleRes {
     pub article: Article,
 }
+
+#[derive(Debug, Clone, Validate, Deserialize)]
+pub struct UpdateArticle {
+    #[validate(length(min = 1))]
+    pub title: Option<String>,
+    #[validate(length(min = 1))]
+    pub description: Option<String>,
+    #[validate(length(min = 1))]
+    pub body: Option<String>,
+}
+
+#[derive(Debug, Clone, Validate, Deserialize)]
+pub struct UpdateArticleReq {
+    #[validate(nested)]
+    pub article: UpdateArticle,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct UpdateArticleRes {
+    pub article: Article,
+}
