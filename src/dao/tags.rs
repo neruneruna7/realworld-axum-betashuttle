@@ -1,5 +1,5 @@
 use axum::async_trait;
-use sqlx::{PgPool, QueryBuilder};
+use sqlx::PgPool;
 
 use crate::{
     core::tags::{dao_trait::TagDaoTrait, entiry::TagEntity},
