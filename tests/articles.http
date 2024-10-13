@@ -56,7 +56,7 @@ Authorization: Token {{$global.token}}
   equal(article.description, "かゆうま");
   equal(article.body, "かゆい，うま");
   // いまはまだタグ機能が実装されていないのでコメントアウト
-  // equal(article.tagList, ["かゆうま", "かゆい", "うま"]);
+  equal(JSON.stringify(article.tagList), JSON.stringify(["かゆうま", "かゆい", "うま"]));
   equal(article.author.username, `${new_username}`);
   equal(article.author.bio, "");
   equal(article.author.image, null);
