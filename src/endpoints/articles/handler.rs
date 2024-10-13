@@ -79,6 +79,8 @@ impl ArticleRouter {
             .collect::<Vec<(i32, i32)>>();
         tag_dao.create_article_tags(article_tag_ids).await?;
 
+        info!("new article created id: {}", article.id);
+
         // 記事の作者(自分)を取得
         let user_entity = user_dao.get_user_by_id(user_id).await?;
         let author = Profile {
