@@ -2,9 +2,11 @@ use std::sync::Arc;
 
 use axum::{routing::get, Extension, Router};
 use realworld_axum_betashuttle::{
-    core::{articles::dao_trait::DynArticlesDao, users::dao_trait::DynUsersDao},
+    core::{
+        articles::dao_trait::DynArticlesDao, profiles::dao_trait::DynProfilesDao,
+        users::dao_trait::DynUsersDao,
+    },
     dao::Daos,
-    dyn_objects::DynProfilesDao,
     endpoints::{
         articles::handler::ArticleRouter, profiles::handler::ProfileRouter,
         users::handler::UserRouter,
@@ -38,12 +40,7 @@ async fn main(
         .nest("/api", UserRouter::new(dyn_users_dao.clone()).to_router())
         .nest(
             "/api",
-            ProfileRouter::new(
-                state.clone(),
-                dyn_users_dao.clone(),
-                dyn_profiles_dao.clone(),
-            )
-            .to_router(),
+            ProfileRouter::new(dyn_users_dao.clone(), dyn_profiles_dao.clone()).to_router(),
         )
         .nest(
             "/api",

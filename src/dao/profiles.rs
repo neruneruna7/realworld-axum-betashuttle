@@ -4,7 +4,6 @@ use crate::{
 };
 use anyhow::Context as _;
 use axum::async_trait;
-use sqlx::{PgExecutor, PgPool};
 use uuid::Uuid;
 
 #[derive(Clone)]
@@ -20,7 +19,6 @@ impl ProfileDao {
 
 #[async_trait]
 impl ProfilesDaoTrait for ProfileDao {
-    type Connection = PgPool;
     /// ユーザーIDをもつユーザーがフォローしているユーザーリストを取得
     async fn get_user_followees(
         &self,
@@ -40,9 +38,9 @@ impl ProfilesDaoTrait for ProfileDao {
         .context("unexpected error: while fetching user_follows")?;
         Ok(user_follows)
     }
+
     async fn following_user(
         &self,
-        conn: &Self::Connection,
         follower_id: Uuid,
         followee_id: Uuid,
     ) -> ConduitResult<UserFollowEntity> {
@@ -66,7 +64,6 @@ impl ProfilesDaoTrait for ProfileDao {
 
     async fn unfollow_user(
         &self,
-        conn: &Self::Connection,
         follower_id: Uuid,
         followee_id: Uuid,
     ) -> ConduitResult<UserFollowEntity> {
@@ -126,7 +123,7 @@ mod tests {
         // ユーザーAがユーザーBをフォローする
         let profile_dao = ProfileDao::new(pool.clone());
         let user_follow = profile_dao
-            .following_user(&pool, user_a.id, user_b.id)
+            .following_user(user_a.id, user_b.id)
             .await
             .unwrap();
         assert_eq!(user_follow.follower_id, user_a.id);
@@ -141,7 +138,7 @@ mod tests {
         // ユーザーAがユーザーBをフォローする
         let profile_dao = ProfileDao::new(pool.clone());
         let user_follow = profile_dao
-            .following_user(&pool, user_a.id, user_b.id)
+            .following_user(user_a.id, user_b.id)
             .await
             .unwrap();
         assert_eq!(user_follow.follower_id, user_a.id);
@@ -149,7 +146,7 @@ mod tests {
 
         // ユーザーAがユーザーBのフォローを解除する
         let user_follow = profile_dao
-            .unfollow_user(&pool, user_a.id, user_b.id)
+            .unfollow_user(user_a.id, user_b.id)
             .await
             .unwrap();
         assert_eq!(user_follow.follower_id, user_a.id);
@@ -164,7 +161,7 @@ mod tests {
         // ユーザーAがユーザーBをフォローする
         let profile_dao = ProfileDao::new(pool.clone());
         let user_follow = profile_dao
-            .following_user(&pool, user_a.id, user_b.id)
+            .following_user(user_a.id, user_b.id)
             .await
             .unwrap();
         assert_eq!(user_follow.follower_id, user_a.id);

@@ -4,7 +4,6 @@ use sqlx::PgPool;
 
 pub mod core;
 pub mod dao;
-pub mod dyn_objects;
 pub mod endpoints;
 pub mod error;
 pub mod extractor;

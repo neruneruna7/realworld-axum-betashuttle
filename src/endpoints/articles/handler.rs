@@ -52,16 +52,14 @@ impl ArticleRouter {
         let slug = slugify(new_article.title.as_str());
 
         tracing::error!("ここでタグが正しいかチェック");
-        // まだないタグがあれば作成
         // 記事を作成
         let create_article = CreatArticle::new(new_article, user_id, slug);
         let article = article_dao.create_article(create_article).await?;
+
         // スラグはユニークである制約があるため，Noneの場合はエラー
         let Some(article) = article else {
             return Err(ConduitError::Conflict("slug already exists".to_string()));
         };
-        // タグと記事の関連付け
-        // 上記の処理，トランザクションでしたいな
 
         // 記事の作者(自分)を取得
         let user_entity = user_dao.get_user_by_id(user_id).await?;

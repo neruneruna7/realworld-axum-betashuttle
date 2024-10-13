@@ -10,28 +10,23 @@ use tracing::info;
 
 use crate::{
     core::{
-        profiles::dto::{Profile, ProfileRes},
+        profiles::{
+            dao_trait::DynProfilesDao,
+            dto::{Profile, ProfileRes},
+        },
         users::dao_trait::DynUsersDao,
     },
-    dyn_objects::DynProfilesDao,
     error::{ConduitError, ConduitResult},
     extractor::{OptionalAuth, RequiredAuth},
-    ArcState,
 };
 
 pub struct ProfileRouter {
-    app_state: ArcState,
     dyn_users_dao: DynUsersDao,
     dyn_profiles_dao: DynProfilesDao,
 }
 impl ProfileRouter {
-    pub fn new(
-        app_state: ArcState,
-        dyn_users_dao: DynUsersDao,
-        dyn_profiles_dao: DynProfilesDao,
-    ) -> Self {
+    pub fn new(dyn_users_dao: DynUsersDao, dyn_profiles_dao: DynProfilesDao) -> Self {
         Self {
-            app_state,
             dyn_users_dao,
             dyn_profiles_dao,
         }
@@ -44,16 +39,14 @@ impl ProfileRouter {
                 post(Self::follow_user).delete(Self::unfollow_user),
             )
             .route("/profiles/:username", get(Self::get_profile_by_username))
-            .layer(Extension(self.app_state.clone()))
             .layer(Extension(self.dyn_users_dao.clone()))
             .layer(Extension(self.dyn_profiles_dao.clone()))
     }
 
-    #[tracing::instrument(skip(app_state, users, profiles))]
+    #[tracing::instrument(skip(users, profiles))]
     // #[debug_handler]
     pub async fn follow_user(
         Path(username): Path<String>,
-        Extension(app_state): Extension<ArcState>,
         Extension(users): Extension<DynUsersDao>,
         Extension(profiles): Extension<DynProfilesDao>,
         RequiredAuth(current_user_id): RequiredAuth,
@@ -72,7 +65,7 @@ impl ProfileRouter {
 
         if !is_following {
             let _ = profiles
-                .following_user(&app_state.pool, current_user_id, followed_user.id)
+                .following_user(current_user_id, followed_user.id)
                 .await?;
         }
 
@@ -122,10 +115,9 @@ impl ProfileRouter {
         Ok((StatusCode::OK, Json(profile_res)))
     }
 
-    #[tracing::instrument(skip(app_state, users, profiles))]
+    #[tracing::instrument(skip(users, profiles))]
     async fn unfollow_user(
         Path(params): Path<HashMap<String, String>>,
-        Extension(app_state): Extension<ArcState>,
         Extension(users): Extension<DynUsersDao>,
         Extension(profiles): Extension<DynProfilesDao>,
         RequiredAuth(current_user_id): RequiredAuth,
@@ -148,7 +140,7 @@ impl ProfileRouter {
 
         if is_following {
             let _ = profiles
-                .unfollow_user(&app_state.pool, current_user_id, followed_user.id)
+                .unfollow_user(current_user_id, followed_user.id)
                 .await?;
         } else {
             return Err(ConduitError::BadRequest("not following".to_string()));
