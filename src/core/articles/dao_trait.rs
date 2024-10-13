@@ -36,7 +36,7 @@ pub trait ArticlesDaoTrait {
     async fn get_article_by_slug(&self, slug: &str) -> Result<Option<ArticleEntity>, ConduitError>;
     async fn update_article(
         &self,
-        slug: &str,
+        article_id: i32,
         update_article: UpdateArticle,
     ) -> ConduitResult<ArticleEntity>;
 }

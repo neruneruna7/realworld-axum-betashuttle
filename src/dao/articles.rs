@@ -66,7 +66,7 @@ impl ArticlesDaoTrait for ArticlesDao {
 
     async fn update_article(
         &self,
-        slug: &str,
+        article_id: i32,
         update_article: UpdateArticle,
     ) -> ConduitResult<ArticleEntity> {
         // Noneのところは更新しない
@@ -77,10 +77,10 @@ impl ArticlesDaoTrait for ArticlesDao {
             SET title = COALESCE($2, title),
                 description = COALESCE($3, description),
                 body = COALESCE($4, body)
-            WHERE slug = $1
+            WHERE id = $1
             RETURNING *
             "#,
-            slug,
+            article_id,
             update_article.title,
             update_article.description,
             update_article.body
@@ -209,14 +209,15 @@ mod tests {
             "slug".to_string(),
         );
 
-        let _created_article = dao
+        let created_article = dao
             .create_article(create_article)
             .await
-            .expect("failed to create article");
+            .expect("failed to create article")
+            .unwrap();
 
         let updated_article = dao
             .update_article(
-                "slug",
+                created_article.id,
                 UpdateArticle {
                     title: Some("new title".to_string()),
                     description: Some("new description".to_string()),
