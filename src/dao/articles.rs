@@ -50,7 +50,7 @@ mod tests {
     #[sqlx::test]
     async fn create_article(pool: PgPool) {
         // テスト用のユーザーを作成
-        let mut db_client = DbClient::new(pool.clone());
+        let db_client = DbClient::new(pool.clone());
         // let new_user = NewUser {
         //     username: Some("username".to_string()),
         //     email: Some("email@example".to_string()),

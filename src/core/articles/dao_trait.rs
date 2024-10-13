@@ -7,6 +7,12 @@ use uuid::Uuid;
 use super::dto::NewArticleValidated;
 use super::entity::ArticleEntity;
 
+// トレイトオブジェクトとしつつ関連型を使うため，<Connection = ()>を書いている
+// これが正しく動くのかわからん
+// 実験しよう
+// pub type DynArticlesDao = Arc<dyn ArticlesDaoTrait<Connection = ()> + Send + Sync>;
+pub type DynArticlesDao = Arc<dyn ArticlesDaoTrait + Send + Sync>;
+
 #[derive(Debug, Clone)]
 pub struct CreatArticle {
     pub article: NewArticleValidated,

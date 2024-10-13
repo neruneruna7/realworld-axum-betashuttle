@@ -4,27 +4,22 @@ use crate::{
 };
 use anyhow::Context as _;
 use axum::async_trait;
-use sqlx::{Executor, PgConnection};
+use sqlx::Executor;
 use uuid::Uuid;
 
 use super::db_client::DbClient;
 
 #[async_trait]
-impl UsersDaoTrait for DbClient
-// where
-//     CN: Executor<'_, Database = sqlx::Postgres> + Send + Sync,
-{
-    type Connection = PgConnection;
+impl UsersDaoTrait for DbClient {
     /// パスワードをハッシュ化しないまま値を渡さないでください
     async fn create_user(
-        &self,
-        conn: &mut Self::Connection,
+        &mut self,
         user_hashed_password: PasswdHashedNewUser,
     ) -> ConduitResult<UserEntity> {
         // UUIDを生成する
         let uuid = Uuid::now_v7();
 
-        let user = sqlx::query_as!(
+        let query = sqlx::query_as!(
             UserEntity,
             r#"
             INSERT INTO users (id, username, email, password)
@@ -35,16 +30,13 @@ impl UsersDaoTrait for DbClient
             user_hashed_password.username,
             user_hashed_password.email,
             user_hashed_password.password
-        )
-        .fetch_one(&mut *conn)
-        .await
-        .context("unexpected error: while inserting user")?;
+        );
 
-        // // トランザクションがSomeの場合はトランザクションを使う
-        // let user = self
-        //     .execute_query(query)
-        //     .await
-        //     .context("unexpected error: while inserting user")?;
+        // トランザクションがSomeの場合はトランザクションを使う
+        let user = self
+            .execute_query(query)
+            .await
+            .context("unexpected error: while inserting user")?;
 
         Ok(user)
     }
@@ -134,9 +126,8 @@ mod tests {
             password: "password".to_string(),
             username: "test".to_string(),
         };
-        let mut dao = DbClient::new(pool.clone());
-        let mut tx = pool.begin().await.unwrap();
-        let user = dao.create_user(&mut *tx, new_user.clone()).await.unwrap();
+        let mut dao = DbClient::new(pool);
+        let user = dao.create_user(new_user.clone()).await.unwrap();
         let test_user = UserEntity {
             id: user.id,
             created_at: user.created_at,
@@ -157,9 +148,8 @@ mod tests {
             password: "password".to_string(),
             username: "userid_get_test".to_string(),
         };
-        let mut dao = DbClient::new(pool.clone());
-        let mut p = pool.acquire().await.unwrap();
-        let user = dao.create_user(&mut *p, new_user.clone()).await.unwrap();
+        let mut dao = DbClient::new(pool);
+        let user = dao.create_user(new_user.clone()).await.unwrap();
         let get_user = dao.get_user_by_id(user.id).await.unwrap();
 
         assert_eq!(user, get_user);
