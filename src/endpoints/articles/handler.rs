@@ -120,20 +120,20 @@ impl ArticleRouter {
         Extension(article_dao): Extension<DynArticlesDao>,
         Extension(tag_dao): Extension<DynTagsDao>,
     ) -> ConduitResult<(StatusCode, Json<GetArticleRes>)> {
-        info!("retriving article");
+        info!("retrieving article");
         let article = article_dao.get_article_by_slug(&slug).await?;
 
-        let Some(exsists_article) = article else {
+        let Some(exists_article) = article else {
             info!("article not found");
             return Err(ConduitError::NotFound("article not found".to_string()));
         };
         info!("article found");
         // タグを取得
-        let tags = tag_dao.get_article_tags(exsists_article.id).await?;
+        let tags = tag_dao.get_article_tags(exists_article.id).await?;
         let tag_list = tags.iter().map(|tag| tag.tag.clone()).collect::<Vec<_>>();
 
         // 記事の作者を取得
-        let user_entity = user_dao.get_user_by_id(exsists_article.author_id).await?;
+        let user_entity = user_dao.get_user_by_id(exists_article.author_id).await?;
         let author = Profile {
             username: user_entity.username,
             bio: user_entity.bio,
@@ -142,14 +142,14 @@ impl ArticleRouter {
         };
 
         let article = Article {
-            id: exsists_article.id,
-            slug: exsists_article.slug,
-            title: exsists_article.title,
-            description: exsists_article.description,
-            body: exsists_article.body,
+            id: exists_article.id,
+            slug: exists_article.slug,
+            title: exists_article.title,
+            description: exists_article.description,
+            body: exists_article.body,
             tag_list,
-            created_at: exsists_article.created_at.to_string(),
-            updated_at: exsists_article.updated_at.to_string(),
+            created_at: exists_article.created_at.to_string(),
+            updated_at: exists_article.updated_at.to_string(),
             favorited: false,
             favorites_count: 0,
             author,

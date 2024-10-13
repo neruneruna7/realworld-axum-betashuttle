@@ -4,7 +4,7 @@ use axum::async_trait;
 
 use crate::error::ConduitResult;
 
-use super::entiry::TagEntity;
+use super::entity::TagEntity;
 
 pub type DynTagsDao = Arc<dyn TagDaoTrait + Send + Sync>;
 #[async_trait]

@@ -2,7 +2,7 @@ use axum::async_trait;
 use sqlx::PgPool;
 
 use crate::{
-    core::tags::{dao_trait::TagDaoTrait, entiry::TagEntity},
+    core::tags::{dao_trait::TagDaoTrait, entity::TagEntity},
     error::ConduitResult,
 };
 
