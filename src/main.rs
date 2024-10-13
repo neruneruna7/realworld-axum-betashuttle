@@ -26,7 +26,6 @@ async fn main(
         pool,
         jwt_secret: _secrets.get("JWT_SECRET").unwrap(),
     };
-
     let state = Arc::new(state);
     let daos = Daos::new(state.pool.clone());
 
