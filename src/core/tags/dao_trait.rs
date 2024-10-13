@@ -1,9 +1,12 @@
+use std::sync::Arc;
+
 use axum::async_trait;
 
 use crate::error::ConduitResult;
 
 use super::entiry::TagEntity;
 
+pub type DynTagsDao = Arc<dyn TagDaoTrait + Send + Sync>;
 #[async_trait]
 pub trait TagDaoTrait {
     async fn create_tags(&self, tags: Vec<String>) -> ConduitResult<Vec<TagEntity>>;
