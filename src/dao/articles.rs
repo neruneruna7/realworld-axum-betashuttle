@@ -5,9 +5,10 @@ use sqlx::PgPool;
 use crate::{
     core::articles::{
         dao_trait::{ArticlesDaoTrait, CreatArticle},
+        dto::UpdateArticle,
         entity::ArticleEntity,
     },
-    error::ConduitError,
+    error::{ConduitError, ConduitResult},
 };
 
 #[derive(Clone)]
@@ -60,6 +61,33 @@ impl ArticlesDaoTrait for ArticlesDao {
         .fetch_optional(&self.pool)
         .await
         .context("unexpected error: while fetching article")?;
+        Ok(article)
+    }
+
+    async fn update_article(
+        &self,
+        slug: &str,
+        update_article: UpdateArticle,
+    ) -> ConduitResult<ArticleEntity> {
+        // Noneのところは更新しない
+        let article = sqlx::query_as!(
+            ArticleEntity,
+            r#"
+            UPDATE articles
+            SET title = COALESCE($2, title),
+                description = COALESCE($3, description),
+                body = COALESCE($4, body)
+            WHERE slug = $1
+            RETURNING *
+            "#,
+            slug,
+            update_article.title,
+            update_article.description,
+            update_article.body
+        )
+        .fetch_one(&self.pool)
+        .await
+        .context("unexpected error: while updating article")?;
         Ok(article)
     }
 }
@@ -118,5 +146,89 @@ mod tests {
             .await
             .expect("failed to create article");
         assert!(article.is_none());
+    }
+
+    #[sqlx::test]
+    async fn get_article_by_slug(pool: PgPool) {
+        // テスト用のユーザーを作成
+        let user_dao = UserDao::new(pool.clone());
+        let new_user =
+            PasswdHashedNewUser::new("a".to_string(), "email".to_string(), "password".to_string());
+        let user = user_dao
+            .create_user(new_user)
+            .await
+            .expect("failed to create user");
+
+        // テスト用の記事を作成
+        let dao = ArticlesDao::new(pool.clone());
+        let create_article = CreatArticle::new(
+            NewArticleValidated {
+                title: "title".to_string(),
+                description: "description".to_string(),
+                body: "body".to_string(),
+                tag_list: vec![],
+            },
+            user.id,
+            "slug".to_string(),
+        );
+
+        let created_article = dao
+            .create_article(create_article)
+            .await
+            .expect("failed to create article");
+
+        let article = dao
+            .get_article_by_slug("slug")
+            .await
+            .expect("failed to get article");
+
+        assert_eq!(article.unwrap(), created_article.unwrap());
+    }
+
+    #[sqlx::test]
+    async fn update_article(pool: PgPool) {
+        // テスト用のユーザーを作成
+        let user_dao = UserDao::new(pool.clone());
+        let new_user =
+            PasswdHashedNewUser::new("a".to_string(), "email".to_string(), "password".to_string());
+        let user = user_dao
+            .create_user(new_user)
+            .await
+            .expect("failed to create user");
+
+        // テスト用の記事を作成
+        let dao = ArticlesDao::new(pool.clone());
+        let create_article = CreatArticle::new(
+            NewArticleValidated {
+                title: "title".to_string(),
+                description: "description".to_string(),
+                body: "body".to_string(),
+                tag_list: vec![],
+            },
+            user.id,
+            "slug".to_string(),
+        );
+
+        let _created_article = dao
+            .create_article(create_article)
+            .await
+            .expect("failed to create article");
+
+        let updated_article = dao
+            .update_article(
+                "slug",
+                UpdateArticle {
+                    title: Some("new title".to_string()),
+                    description: Some("new description".to_string()),
+                    body: None,
+                },
+            )
+            .await
+            .expect("failed to update article");
+
+        assert_eq!(updated_article.title, "new title");
+        assert_eq!(updated_article.description, "new description");
+        assert_eq!(updated_article.body, "body");
+        assert_eq!(updated_article.slug, "slug");
     }
 }
