@@ -12,7 +12,7 @@ use axum_macros::debug_handler;
 
 use crate::{
     core::users::{
-        dao_trait::UsersDaoTrait,
+        dao_trait::{DynUsersDao, UsersDaoTrait},
         dto::{
             GetUserRes, LoginUserReq, LoginUserRes, RegisterUserReq, RegisterUserRes,
             UpdateUserReq, UpdateUserRes,
@@ -24,14 +24,11 @@ use crate::{
     ArcState,
 };
 
-pub struct UserRouter<D> {
-    users_dao: D,
+pub struct UserRouter {
+    users_dao: DynUsersDao,
 }
 
-impl<D> UserRouter<D>
-where
-    D: UsersDaoTrait + Send + Sync,
-{
+impl UserRouter {
     pub fn new(dyn_users_dao: DynUsersDao) -> Self {
         Self {
             users_dao: dyn_users_dao,

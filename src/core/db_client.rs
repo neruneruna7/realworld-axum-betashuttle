@@ -4,7 +4,7 @@ use axum::async_trait;
 
 use crate::error::ConduitResult;
 
-pub type DynDbClient = Arc<dyn DbClientTrait + Send + Sync>;
+use super::users::dao_trait::UsersDaoTrait;
 
 #[async_trait]
 pub trait DbClientTrait {

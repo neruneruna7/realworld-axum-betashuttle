@@ -88,7 +88,7 @@ mod tests {
     use sqlx::PgPool;
 
     async fn setup_user_ab(pool: &PgPool) -> (UserEntity, UserEntity) {
-        let db_client = DbClient::new(pool.clone());
+        let mut db_client = DbClient::new(pool.clone());
         // テスト用のユーザーAとBを作成
         let new_a_user = NewUser {
             username: Some("test_user_a".to_string()),
