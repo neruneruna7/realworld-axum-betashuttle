@@ -4,7 +4,7 @@ use axum::{routing::get, Extension, Router};
 use realworld_axum_betashuttle::{
     core::{
         articles::dao_trait::DynArticlesDao, profiles::dao_trait::DynProfilesDao,
-        users::dao_trait::DynUsersDao,
+        tags::dao_trait::DynTagsDao, users::dao_trait::DynUsersDao,
     },
     dao::Daos,
     endpoints::{
@@ -34,6 +34,7 @@ async fn main(
     let dyn_users_dao = Arc::new(daos.users) as DynUsersDao;
     let dyn_profiles_dao = Arc::new(daos.profiles) as DynProfilesDao;
     let dyn_articles_dao = Arc::new(daos.articles) as DynArticlesDao;
+    let dyn_tags_dao = Arc::new(daos.tags) as DynTagsDao;
 
     let router = Router::new()
         .route("/", get(hello_world))
@@ -44,7 +45,7 @@ async fn main(
         )
         .nest(
             "/api",
-            ArticleRouter::new(dyn_articles_dao, dyn_users_dao).to_router(),
+            ArticleRouter::new(dyn_articles_dao, dyn_users_dao, dyn_tags_dao).to_router(),
         )
         .layer(Extension(state));
 

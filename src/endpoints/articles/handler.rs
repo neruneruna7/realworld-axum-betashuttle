@@ -19,13 +19,15 @@ use crate::{
 pub struct ArticleRouter {
     article_dao: DynArticlesDao,
     user_dao: DynUsersDao,
+    tag_dao: DynTagsDao,
 }
 
 impl ArticleRouter {
-    pub fn new(article_dao: DynArticlesDao, user_dao: DynUsersDao) -> Self {
+    pub fn new(article_dao: DynArticlesDao, user_dao: DynUsersDao, tag_dao: DynTagsDao) -> Self {
         Self {
             article_dao,
             user_dao,
+            tag_dao,
         }
     }
 
@@ -34,6 +36,7 @@ impl ArticleRouter {
             .route("/articles", post(Self::create_article))
             .layer(Extension(self.article_dao.clone()))
             .layer(Extension(self.user_dao.clone()))
+            .layer(Extension(self.tag_dao.clone()))
     }
 
     #[tracing::instrument(skip_all)]
