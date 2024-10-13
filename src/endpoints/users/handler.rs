@@ -12,7 +12,7 @@ use axum_macros::debug_handler;
 
 use crate::{
     core::users::{
-        dao_trait::UsersDaoTrait,
+        dao_trait::DynUsersDao,
         dto::{
             GetUserRes, LoginUserReq, LoginUserRes, RegisterUserReq, RegisterUserRes,
             UpdateUserReq, UpdateUserRes,
@@ -24,18 +24,13 @@ use crate::{
     ArcState,
 };
 
-pub struct UserRouter<D> {
-    users_dao: D,
+pub struct UserRouter {
+    dyn_users_dao: DynUsersDao,
 }
 
-impl<D> UserRouter<D>
-where
-    D: UsersDaoTrait + Send + Sync,
-{
+impl UserRouter {
     pub fn new(dyn_users_dao: DynUsersDao) -> Self {
-        Self {
-            users_dao: dyn_users_dao,
-        }
+        Self { dyn_users_dao }
     }
 
     pub fn to_router(&self) -> Router {
@@ -44,7 +39,7 @@ where
             .route("/users/login", post(Self::login_user))
             .route("/user", get(Self::get_current_user))
             .route("/user", put(Self::update_user))
-            .layer(Extension(self.users_dao.clone()))
+            .layer(Extension(self.dyn_users_dao.clone()))
     }
 
     // ログ出力結果にパスワードを含まないようにする

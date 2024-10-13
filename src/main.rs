@@ -2,10 +2,8 @@ use std::sync::Arc;
 
 use axum::{routing::get, Extension, Router};
 use realworld_axum_betashuttle::{
-    core::{
-        articles::dao_trait::DynArticlesDao, db_client::DynDbClient, users::dao_trait::DynUsersDao,
-    },
-    dao::db_client::DbClient,
+    core::{articles::dao_trait::DynArticlesDao, users::dao_trait::DynUsersDao},
+    dao::Daos,
     dyn_objects::DynProfilesDao,
     endpoints::{
         articles::handler::ArticleRouter, profiles::handler::ProfileRouter,
@@ -30,12 +28,11 @@ async fn main(
     };
 
     let state = Arc::new(state);
-    let db_client = DbClient::new(state.pool.clone());
-    let db_client = Arc::new(db_client) as DynDbClient;
+    let daos = Daos::new(state.pool.clone());
 
-    let dyn_users_dao = Arc::new(db_client.users) as DynUsersDao;
-    let dyn_profiles_dao = Arc::new(db_client.profiles) as DynProfilesDao;
-    let dyn_articles_dao = Arc::new(db_client.articles) as DynArticlesDao;
+    let dyn_users_dao = Arc::new(daos.users) as DynUsersDao;
+    let dyn_profiles_dao = Arc::new(daos.profiles) as DynProfilesDao;
+    let dyn_articles_dao = Arc::new(daos.articles) as DynArticlesDao;
 
     let router = Router::new()
         .route("/", get(hello_world))

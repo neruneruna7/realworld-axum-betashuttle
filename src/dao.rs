@@ -1,4 +1,5 @@
 use sqlx::{postgres::PgTransactionManager, PgPool};
+use users::UserDao;
 
 pub mod articles;
 pub mod db_client;

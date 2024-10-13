@@ -10,10 +10,19 @@ use crate::{
     error::ConduitError,
 };
 
-use super::db_client::DbClient;
+#[derive(Clone)]
+pub struct ArticlesDao {
+    pool: PgPool,
+}
+
+impl ArticlesDao {
+    pub fn new(pool: PgPool) -> Self {
+        Self { pool }
+    }
+}
 
 #[async_trait]
-impl ArticlesDaoTrait for DbClient {
+impl ArticlesDaoTrait for ArticlesDao {
     async fn create_article(
         &self,
         create_article: CreatArticle,
@@ -42,15 +51,18 @@ impl ArticlesDaoTrait for DbClient {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::{
-        articles::{dao_trait::ArticlesDaoTrait, dto::NewArticleValidated},
-        users::{dao_trait::UsersDaoTrait as _, dto::PasswdHashedNewUser},
+    use crate::{
+        core::{
+            articles::{dao_trait::ArticlesDaoTrait, dto::NewArticleValidated},
+            users::{dao_trait::UsersDaoTrait as _, dto::PasswdHashedNewUser},
+        },
+        dao::users::UserDao,
     };
 
     #[sqlx::test]
     async fn create_article(pool: PgPool) {
         // テスト用のユーザーを作成
-        let db_client = DbClient::new(pool.clone());
+        let user_dao = UserDao::new(pool.clone());
         // let new_user = NewUser {
         //     username: Some("username".to_string()),
         //     email: Some("email@example".to_string()),
@@ -62,12 +74,13 @@ mod tests {
             "password".to_string(),
         );
 
-        let user = db_client
+        let user = user_dao
             .create_user(new_user)
             .await
             .expect("failed to create user");
 
         // テスト用の記事を作成
+        let dao = ArticlesDao::new(pool);
         let create_article = CreatArticle::new(
             NewArticleValidated {
                 title: "title".to_string(),
@@ -78,13 +91,13 @@ mod tests {
             user.id,
             "slug".to_string(),
         );
-        let article = db_client
+        let article = dao
             .create_article(create_article.clone())
             .await
             .expect("failed to create article");
         assert!(article.is_some());
 
-        let article = db_client
+        let article = dao
             .create_article(create_article)
             .await
             .expect("failed to create article");

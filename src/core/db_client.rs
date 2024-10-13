@@ -1,10 +1,6 @@
-use std::sync::Arc;
-
 use axum::async_trait;
 
 use crate::error::ConduitResult;
-
-pub type DynDbClient = Arc<dyn DbClientTrait + Send + Sync>;
 
 #[async_trait]
 pub trait DbClientTrait {
