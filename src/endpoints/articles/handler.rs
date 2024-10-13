@@ -11,7 +11,10 @@ use crate::{
     core::{
         articles::{
             dao_trait::{CreatArticle, DynArticlesDao},
-            dto::{Article, CreateArticleReq, CreateArticleRes, GetArticleRes},
+            dto::{
+                Article, CreateArticleReq, CreateArticleRes, GetArticleRes, UpdateArticleReq,
+                UpdateArticleRes,
+            },
         },
         profiles::dto::Profile,
         tags::dao_trait::DynTagsDao,
@@ -156,5 +159,16 @@ impl ArticleRouter {
         };
 
         Ok((StatusCode::OK, Json(GetArticleRes { article })))
+    }
+
+    #[tracing::instrument(skip_all)]
+    async fn update_article(
+        RequiredAuth(user_id): RequiredAuth,
+        Extension(user_dao): Extension<DynUsersDao>,
+        Extension(article_dao): Extension<DynArticlesDao>,
+        Extension(tag_dao): Extension<DynTagsDao>,
+        ValidationExtractor(req): ValidationExtractor<UpdateArticleReq>,
+    ) -> ConduitResult<(StatusCode, Json<UpdateArticleRes>)> {
+        todo!()
     }
 }
