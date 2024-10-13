@@ -46,6 +46,22 @@ impl ArticlesDaoTrait for ArticlesDao {
         .context("unexpected error: while inserting article")?;
         Ok(article)
     }
+
+    async fn get_article_by_slug(&self, slug: &str) -> Result<Option<ArticleEntity>, ConduitError> {
+        let article = sqlx::query_as!(
+            ArticleEntity,
+            r#"
+            SELECT *
+            FROM articles
+            WHERE slug = $1
+            "#,
+            slug
+        )
+        .fetch_optional(&self.pool)
+        .await
+        .context("unexpected error: while fetching article")?;
+        Ok(article)
+    }
 }
 
 #[cfg(test)]

@@ -55,7 +55,23 @@ Authorization: Token {{$global.token}}
   equal(article.title, "かゆうま");
   equal(article.description, "かゆうま");
   equal(article.body, "かゆい，うま");
-  // いまはまだタグ機能が実装されていないのでコメントアウト
+  equal(JSON.stringify(article.tagList), JSON.stringify(["かゆうま", "かゆい", "うま"]));
+  equal(article.author.username, `${new_username}`);
+  equal(article.author.bio, "");
+  equal(article.author.image, null);
+}}
+
+### 記事取得
+GET /articles/{{$global.slug}}
+Accept: application/json
+
+# test the response body
+{{
+  const {equal} = require('assert');
+  const article = response.parsedBody.article;
+  equal(article.title, "かゆうま");
+  equal(article.description, "かゆうま");
+  equal(article.body, "かゆい，うま");
   equal(JSON.stringify(article.tagList), JSON.stringify(["かゆうま", "かゆい", "うま"]));
   equal(article.author.username, `${new_username}`);
   equal(article.author.bio, "");

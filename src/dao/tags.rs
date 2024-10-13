@@ -72,6 +72,22 @@ impl TagDaoTrait for TagsDao {
         .await?;
         Ok(())
     }
+
+    async fn get_article_tags(&self, article_id: i32) -> ConduitResult<Vec<TagEntity>> {
+        let tags_entity = sqlx::query_as!(
+            TagEntity,
+            r#"
+            SELECT tags.* FROM tags
+            JOIN article_tags ON tags.id = article_tags.tag_id
+            WHERE article_tags.article_id = $1
+            "#,
+            article_id
+        )
+        .fetch_all(&self.pool)
+        .await?;
+
+        Ok(tags_entity)
+    }
 }
 
 // test

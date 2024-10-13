@@ -64,3 +64,8 @@ pub struct Article {
 pub struct CreateArticleRes {
     pub article: Article,
 }
+
+#[derive(Debug, Clone, Serialize)]
+pub struct GetArticleRes {
+    pub article: Article,
+}

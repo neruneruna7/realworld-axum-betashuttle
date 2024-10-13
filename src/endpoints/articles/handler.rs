@@ -1,4 +1,9 @@
-use axum::{http::StatusCode, routing::post, Extension, Json, Router};
+use axum::{
+    extract::Path,
+    http::StatusCode,
+    routing::{get, post},
+    Extension, Json, Router,
+};
 use slug::slugify;
 use tracing::info;
 
@@ -6,7 +11,7 @@ use crate::{
     core::{
         articles::{
             dao_trait::{CreatArticle, DynArticlesDao},
-            dto::{Article, CreateArticleReq, CreateArticleRes},
+            dto::{Article, CreateArticleReq, CreateArticleRes, GetArticleRes},
         },
         profiles::dto::Profile,
         tags::dao_trait::DynTagsDao,
@@ -34,6 +39,7 @@ impl ArticleRouter {
     pub fn to_router(&self) -> Router {
         Router::new()
             .route("/articles", post(Self::create_article))
+            .route("/articles/:slug", get(Self::get_article))
             .layer(Extension(self.article_dao.clone()))
             .layer(Extension(self.user_dao.clone()))
             .layer(Extension(self.tag_dao.clone()))
@@ -105,5 +111,50 @@ impl ArticleRouter {
         };
 
         Ok((StatusCode::CREATED, Json(CreateArticleRes { article })))
+    }
+
+    #[tracing::instrument(skip(user_dao, article_dao, tag_dao))]
+    pub async fn get_article(
+        Path(slug): Path<String>,
+        Extension(user_dao): Extension<DynUsersDao>,
+        Extension(article_dao): Extension<DynArticlesDao>,
+        Extension(tag_dao): Extension<DynTagsDao>,
+    ) -> ConduitResult<(StatusCode, Json<GetArticleRes>)> {
+        info!("retriving article");
+        let article = article_dao.get_article_by_slug(&slug).await?;
+
+        let Some(exsists_article) = article else {
+            info!("article not found");
+            return Err(ConduitError::NotFound("article not found".to_string()));
+        };
+        info!("article found");
+        // タグを取得
+        let tags = tag_dao.get_article_tags(exsists_article.id).await?;
+        let tag_list = tags.iter().map(|tag| tag.tag.clone()).collect::<Vec<_>>();
+
+        // 記事の作者を取得
+        let user_entity = user_dao.get_user_by_id(exsists_article.author_id).await?;
+        let author = Profile {
+            username: user_entity.username,
+            bio: user_entity.bio,
+            image: user_entity.image,
+            following: false,
+        };
+
+        let article = Article {
+            id: exsists_article.id,
+            slug: exsists_article.slug,
+            title: exsists_article.title,
+            description: exsists_article.description,
+            body: exsists_article.body,
+            tag_list,
+            created_at: exsists_article.created_at.to_string(),
+            updated_at: exsists_article.updated_at.to_string(),
+            favorited: false,
+            favorites_count: 0,
+            author,
+        };
+
+        Ok((StatusCode::OK, Json(GetArticleRes { article })))
     }
 }
