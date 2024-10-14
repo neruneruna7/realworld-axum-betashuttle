@@ -88,6 +88,19 @@ Authorization: Token {{$global.token}}
   "article": {
     "title": "かゆい",
     "description": "かゆい",
-    "body": "かゆい",
+    "body": "かゆい"
   }
 }
+
+# test the response body
+{{
+  const {equal} = require('assert');
+  const article = response.parsedBody.article;
+  equal(article.title, "かゆい");
+  equal(article.description, "かゆい");
+  equal(article.body, "かゆい");
+  equal(JSON.stringify(article.tagList), JSON.stringify(["かゆうま", "かゆい", "うま"]));
+  equal(article.author.username, `${new_username}`);
+  equal(article.author.bio, "");
+  equal(article.author.image, null);
+}}
