@@ -77,3 +77,17 @@ Accept: application/json
   equal(article.author.bio, "");
   equal(article.author.image, null);
 }}
+
+### 記事更新
+PUT /articles/{{$global.slug}}
+Accept: application/json
+Content-Type: application/json
+Authorization: Token {{$global.token}}
+
+{
+  "article": {
+    "title": "かゆい",
+    "description": "かゆい",
+    "body": "かゆい",
+  }
+}
