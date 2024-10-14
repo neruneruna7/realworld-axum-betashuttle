@@ -11,7 +11,10 @@ use crate::{
     core::{
         articles::{
             dao_trait::{CreatArticle, DynArticlesDao},
-            dto::{Article, CreateArticleReq, CreateArticleRes, GetArticleRes},
+            dto::{
+                Article, CreateArticleReq, CreateArticleRes, GetArticleRes, UpdateArticleReq,
+                UpdateArticleRes,
+            },
         },
         profiles::dto::Profile,
         tags::dao_trait::DynTagsDao,
@@ -39,7 +42,10 @@ impl ArticleRouter {
     pub fn to_router(&self) -> Router {
         Router::new()
             .route("/articles", post(Self::create_article))
-            .route("/articles/:slug", get(Self::get_article))
+            .route(
+                "/articles/:slug",
+                get(Self::get_article).put(Self::update_article),
+            )
             .layer(Extension(self.article_dao.clone()))
             .layer(Extension(self.user_dao.clone()))
             .layer(Extension(self.tag_dao.clone()))
@@ -156,5 +162,75 @@ impl ArticleRouter {
         };
 
         Ok((StatusCode::OK, Json(GetArticleRes { article })))
+    }
+
+    #[tracing::instrument(skip(user_dao, article_dao, tag_dao, req))]
+    async fn update_article(
+        Path(slug): Path<String>,
+        RequiredAuth(user_id): RequiredAuth,
+        Extension(user_dao): Extension<DynUsersDao>,
+        Extension(article_dao): Extension<DynArticlesDao>,
+        Extension(tag_dao): Extension<DynTagsDao>,
+        ValidationExtractor(req): ValidationExtractor<UpdateArticleReq>,
+    ) -> ConduitResult<(StatusCode, Json<UpdateArticleRes>)> {
+        info!("retrieving article to update");
+        let update_article = req.article;
+        // 記事の作者であるかどうかの確認
+        // 作者でない場合はエラー
+        let article = article_dao.get_article_by_slug(&slug).await?;
+        let Some(article) = article else {
+            info!("article not found");
+            return Err(ConduitError::NotFound("article not found".to_string()));
+        };
+
+        if article.author_id != user_id {
+            info!("invalid user");
+            return Err(ConduitError::Forbidden(
+                "you are not the author".to_string(),
+            ));
+        }
+        // 記事の更新
+        // titleからslugを生成
+        // titleがNoneならslugもNone
+        let slug = if let Some(title) = &update_article.title {
+            let slug = slugify(title);
+            Some(slug)
+        } else {
+            None
+        };
+        let updated_article = article_dao
+            .update_article(article.id, slug, update_article)
+            .await?;
+
+        info!("article updated");
+        // 返す値の用意
+        // 記事のタグを取得
+        let tags = tag_dao.get_article_tags(updated_article.id).await?;
+        let tag_list = tags.iter().map(|tag| tag.tag.clone()).collect::<Vec<_>>();
+
+        // 記事の作者を取得
+        let user_entity = user_dao.get_user_by_id(updated_article.author_id).await?;
+        let author = Profile {
+            username: user_entity.username,
+            bio: user_entity.bio,
+            image: user_entity.image,
+            following: false,
+        };
+        // faviritedとfavorites_countは未実装
+        let article = Article {
+            id: updated_article.id,
+            slug: updated_article.slug,
+            title: updated_article.title,
+            description: updated_article.description,
+            body: updated_article.body,
+            tag_list,
+            created_at: updated_article.created_at.to_string(),
+            updated_at: updated_article.updated_at.to_string(),
+            favorited: false,
+            favorites_count: 0,
+            author,
+        };
+
+        Ok((StatusCode::OK, Json(UpdateArticleRes { article })))
     }
 }

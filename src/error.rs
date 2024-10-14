@@ -47,6 +47,8 @@ pub enum ConduitError {
     AnyhowError(#[from] anyhow::Error),
     #[error("{0}")]
     Conflict(String),
+    #[error("Forbidden: {0}")]
+    Forbidden(String),
 }
 
 impl IntoResponse for ConduitError {
@@ -77,6 +79,7 @@ impl IntoResponse for ConduitError {
             // Extensionの取得に失敗した場合 サーバー側の問題
             Self::AxumExtensionRejection(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()),
             Self::AnyhowError(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()),
+            Self::Forbidden(e) => (StatusCode::FORBIDDEN, e),
         };
         let body = Json(message);
 
