@@ -320,4 +320,43 @@ mod tests {
             .await
             .expect("failed to update article");
     }
+
+    // 削除テスト
+    #[sqlx::test]
+    async fn delete_article(pool: PgPool) {
+        // テスト用のユーザーを作成
+        let user_dao = UserDao::new(pool.clone());
+        let new_user =
+            PasswdHashedNewUser::new("a".to_string(), "email".to_string(), "password".to_string());
+        let user = user_dao
+            .create_user(new_user)
+            .await
+            .expect("failed to create user");
+
+        // テスト用の記事を作成
+        let dao = ArticlesDao::new(pool.clone());
+        let create_article = CreatArticle::new(
+            NewArticleValidated {
+                title: "title".to_string(),
+                description: "description".to_string(),
+                body: "body".to_string(),
+                tag_list: vec![],
+            },
+            user.id,
+            "slug".to_string(),
+        );
+
+        let created_article = dao
+            .create_article(create_article)
+            .await
+            .expect("failed to create article")
+            .unwrap();
+
+        let deleted_article = dao
+            .delete_article_by_slug("slug")
+            .await
+            .expect("failed to delete article");
+
+        assert_eq!(deleted_article, created_article);
+    }
 }
