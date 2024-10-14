@@ -40,4 +40,6 @@ pub trait ArticlesDaoTrait {
         slug: Option<String>,
         update_article: UpdateArticle,
     ) -> ConduitResult<ArticleEntity>;
+    // スラグをもとに記事削除 削除した記事を返す
+    async fn delete_article_by_slug(&self, slug: &str) -> ConduitResult<ArticleEntity>;
 }

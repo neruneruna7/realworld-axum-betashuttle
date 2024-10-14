@@ -95,6 +95,23 @@ impl ArticlesDaoTrait for ArticlesDao {
         .context("unexpected error: while updating article")?;
         Ok(article)
     }
+
+    // スラグをもとに記事削除 削除した記事を返す
+    async fn delete_article_by_slug(&self, slug: &str) -> ConduitResult<ArticleEntity> {
+        let article = sqlx::query_as!(
+            ArticleEntity,
+            r#"
+            DELETE FROM articles
+            WHERE slug = $1
+            RETURNING *
+            "#,
+            slug
+        )
+        .fetch_one(&self.pool)
+        .await
+        .context("unexpected error: while deleting article")?;
+        Ok(article)
+    }
 }
 
 #[cfg(test)]
