@@ -44,7 +44,9 @@ impl ArticleRouter {
             .route("/articles", post(Self::create_article))
             .route(
                 "/articles/:slug",
-                get(Self::get_article).put(Self::update_article),
+                get(Self::get_article)
+                    .put(Self::update_article)
+                    .delete(Self::delete_article),
             )
             .layer(Extension(self.article_dao.clone()))
             .layer(Extension(self.user_dao.clone()))
@@ -232,5 +234,39 @@ impl ArticleRouter {
         };
 
         Ok((StatusCode::OK, Json(UpdateArticleRes { article })))
+    }
+
+    // 記事削除エンドポイント
+    // トークンは必要
+    // 返す値はない 成功なら200
+    // 認証されていない場合は401
+    // それ以外は422
+    #[tracing::instrument(skip(article_dao))]
+    pub async fn delete_article(
+        Path(slug): Path<String>,
+        RequiredAuth(user_id): RequiredAuth,
+        Extension(article_dao): Extension<DynArticlesDao>,
+    ) -> ConduitResult<StatusCode> {
+        info!("deleting article");
+        // 記事の作者であるかどうかの確認
+        // 作者でない場合はエラー
+        let article = article_dao.get_article_by_slug(&slug).await?;
+        let Some(article) = article else {
+            info!("article not found");
+            return Err(ConduitError::NotFound("article not found".to_string()));
+        };
+
+        if article.author_id != user_id {
+            info!("invalid user");
+            return Err(ConduitError::Forbidden(
+                "you are not the author".to_string(),
+            ));
+        }
+
+        // 記事の削除
+        article_dao.delete_article_by_slug(&slug).await?;
+
+        info!("article deleted");
+        Ok(StatusCode::OK)
     }
 }
