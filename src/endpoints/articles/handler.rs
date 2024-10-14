@@ -42,7 +42,10 @@ impl ArticleRouter {
     pub fn to_router(&self) -> Router {
         Router::new()
             .route("/articles", post(Self::create_article))
-            .route("/articles/:slug", get(Self::get_article))
+            .route(
+                "/articles/:slug",
+                get(Self::get_article).put(Self::update_article),
+            )
             .layer(Extension(self.article_dao.clone()))
             .layer(Extension(self.user_dao.clone()))
             .layer(Extension(self.tag_dao.clone()))
@@ -187,8 +190,16 @@ impl ArticleRouter {
             ));
         }
         // 記事の更新
+        // titleからslugを生成
+        // titleがNoneならslugもNone
+        let slug = if let Some(title) = &update_article.title {
+            let slug = slugify(title);
+            Some(slug)
+        } else {
+            None
+        };
         let updated_article = article_dao
-            .update_article(article.id, update_article)
+            .update_article(article.id, slug, update_article)
             .await?;
 
         info!("article updated");

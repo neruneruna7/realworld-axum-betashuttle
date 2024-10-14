@@ -37,6 +37,7 @@ pub trait ArticlesDaoTrait {
     async fn update_article(
         &self,
         article_id: i32,
+        slug: Option<String>,
         update_article: UpdateArticle,
     ) -> ConduitResult<ArticleEntity>;
 }

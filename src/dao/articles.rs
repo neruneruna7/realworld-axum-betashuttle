@@ -67,23 +67,28 @@ impl ArticlesDaoTrait for ArticlesDao {
     async fn update_article(
         &self,
         article_id: i32,
+        slug: Option<String>,
         update_article: UpdateArticle,
     ) -> ConduitResult<ArticleEntity> {
         // Noneのところは更新しない
+        // titleの更新に伴って，slugも更新する
+        // が，slugが衝突したら更新しない
         let article = sqlx::query_as!(
             ArticleEntity,
             r#"
             UPDATE articles
             SET title = COALESCE($2, title),
                 description = COALESCE($3, description),
-                body = COALESCE($4, body)
+                body = COALESCE($4, body),
+                slug = COALESCE($5, slug)
             WHERE id = $1
             RETURNING *
             "#,
             article_id,
             update_article.title,
             update_article.description,
-            update_article.body
+            update_article.body,
+            slug,
         )
         .fetch_one(&self.pool)
         .await
@@ -218,6 +223,7 @@ mod tests {
         let updated_article = dao
             .update_article(
                 created_article.id,
+                Some("slug".to_string()),
                 UpdateArticle {
                     title: Some("new title".to_string()),
                     description: Some("new description".to_string()),
@@ -231,5 +237,70 @@ mod tests {
         assert_eq!(updated_article.description, "new description");
         assert_eq!(updated_article.body, "body");
         assert_eq!(updated_article.slug, "slug");
+    }
+
+    // スラグコンフリクト時に更新しないことを確認
+    #[sqlx::test]
+    #[should_panic]
+    async fn update_article_conflict(pool: PgPool) {
+        // テスト用のユーザーを作成
+        let user_dao = UserDao::new(pool.clone());
+        let new_user =
+            PasswdHashedNewUser::new("a".to_string(), "email".to_string(), "password".to_string());
+        let user = user_dao
+            .create_user(new_user)
+            .await
+            .expect("failed to create user");
+
+        // テスト用の記事1を作成
+        let dao = ArticlesDao::new(pool.clone());
+        let create_article = CreatArticle::new(
+            NewArticleValidated {
+                title: "title".to_string(),
+                description: "description".to_string(),
+                body: "body".to_string(),
+                tag_list: vec![],
+            },
+            user.id,
+            "slug".to_string(),
+        );
+
+        let created_article = dao
+            .create_article(create_article)
+            .await
+            .expect("failed to create article")
+            .unwrap();
+
+        // テスト用の記事2を作成
+        let create_article = CreatArticle::new(
+            NewArticleValidated {
+                title: "title".to_string(),
+                description: "description".to_string(),
+                body: "body".to_string(),
+                tag_list: vec![],
+            },
+            user.id,
+            "slug2".to_string(),
+        );
+
+        let created_article2 = dao
+            .create_article(create_article)
+            .await
+            .expect("failed to create article")
+            .unwrap();
+
+        // 記事2のスラグを記事1のスラグと同じものに更新
+        let updated_article = dao
+            .update_article(
+                created_article2.id,
+                Some("slug".to_string()),
+                UpdateArticle {
+                    title: Some("new title".to_string()),
+                    description: Some("new description".to_string()),
+                    body: None,
+                },
+            )
+            .await
+            .expect("failed to update article");
     }
 }
