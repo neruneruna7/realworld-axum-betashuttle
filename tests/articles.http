@@ -92,6 +92,11 @@ Authorization: Token {{$global.token}}
   }
 }
 
+# slugの更新
+{{
+  $global.slug=response.parsedBody.article.slug;
+}}
+
 # test the response body
 {{
   const {equal} = require('assert');
@@ -103,4 +108,26 @@ Authorization: Token {{$global.token}}
   equal(article.author.username, `${new_username}`);
   equal(article.author.bio, "");
   equal(article.author.image, null);
+}}
+
+### 記事削除 異常系
+DELETE /articles/{{$global.slug}}
+Accept: application/json
+Authorization: Token unknown
+
+# test the response body
+{{
+  const {equal} = require('assert');
+  equal(response.statusCode, 401);
+}}
+
+### 記事削除 正常系 無効なユーザー
+DELETE /articles/{{$global.slug}}
+Accept: application/json
+Authorization: Token {{$global.token}}
+
+# test the response body
+{{
+  const {equal} = require('assert');
+  equal(response.statusCode, 200);
 }}
