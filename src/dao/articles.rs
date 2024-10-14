@@ -265,7 +265,7 @@ mod tests {
             "slug".to_string(),
         );
 
-        let created_article = dao
+        let _created_article = dao
             .create_article(create_article)
             .await
             .expect("failed to create article")
@@ -290,7 +290,7 @@ mod tests {
             .unwrap();
 
         // 記事2のスラグを記事1のスラグと同じものに更新
-        let updated_article = dao
+        let _updated_article = dao
             .update_article(
                 created_article2.id,
                 Some("slug".to_string()),
