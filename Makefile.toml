@@ -21,5 +21,7 @@ echo "Follow: フォロー"
 httpyac -a ./tests/follow_getProfile_unfollow.http
 echo "Article: 記事"
 httpyac -a ./tests/articles.http
+echo "Favorite: いいね"
+httpyac -a ./tests/favorites.http
 """
 dependencies = ["dbreset"]
