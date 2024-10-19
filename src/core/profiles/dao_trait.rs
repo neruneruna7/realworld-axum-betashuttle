@@ -26,4 +26,10 @@ pub trait ProfilesDaoTrait {
         follower_id: Uuid,
         following_id: Uuid,
     ) -> ConduitResult<UserFollowEntity>;
+
+    async fn is_follow(
+        &self,
+        follower_id: Uuid,
+        following_id: Uuid,
+    ) -> ConduitResult<Option<UserFollowEntity>>;
 }

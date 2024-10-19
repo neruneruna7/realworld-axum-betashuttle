@@ -1,0 +1,101 @@
+@host=http://localhost:8000/api
+@new_user_email_A={{$random.email()}}
+@new_username_A={{"A_" + $random.alphabetic()}}
+@new_user_email_B={{$random.email()}}
+@new_username_B={{"B_" + $random.alphabetic()}}
+### Create a new user A
+POST /users
+Accept: application/json
+Content-Type: application/json
+
+{
+  "user": {
+    "username": "{{new_username_A}}",
+    "email": "{{new_user_email_A}}",
+    "password": "password"
+  }
+}
+
+# Extract token from response
+# and test the response body
+{{
+  $global.token=response.parsedBody.user.token;
+  const {equal} = require('assert');
+  const user = response.parsedBody.user;
+  equal(user.email, `${new_user_email_A}`);
+  equal(user.username, `${new_username_A}`);
+  equal(user.bio, "");
+  equal(user.image, null);
+}}
+
+### Create a new user B
+POST /users
+Accept: application/json
+Content-Type: application/json
+
+{
+    "user": {
+        "username": "{{new_username_B}}",
+        "email": "{{new_user_email_B}}",
+        "password": "password"
+    }
+}
+
+# Extract token from response
+# and test the response body
+{{
+  $global.token_B=response.parsedBody.user.token;
+  const {equal} = require('assert');
+  const user = response.parsedBody.user;
+  equal(user.email, `${new_user_email_B}`);
+  equal(user.username, `${new_username_B}`);
+  equal(user.bio, "");
+  equal(user.image, null);
+}}
+
+
+### 記事作成
+POST /articles
+Accept: application/json
+Content-Type: application/json
+Authorization: Token {{$global.token}}
+
+{
+  "article": {
+    "title": "かゆうま",
+    "description": "かゆうま",
+    "body": "かゆい，うま",
+    "tagList": ["かゆうま", "かゆい", "うま"]
+  }
+}
+
+# Extract slug from response
+{{
+  $global.slug=response.parsedBody.article.slug;
+}}
+
+# test the response body
+{{
+  const {equal} = require('assert');
+  const article = response.parsedBody.article;
+  equal(article.title, "かゆうま");
+  equal(article.description, "かゆうま");
+  equal(article.body, "かゆい，うま");
+  equal(JSON.stringify(article.tagList), JSON.stringify(["かゆうま", "かゆい", "うま"]));
+  equal(article.author.username, `${new_username_A}`);
+  equal(article.author.bio, "");
+  equal(article.author.image, null);
+}}
+
+### B user がA userの記事をお気に入り登録
+POST /articles/{{$global.slug}}/favorite
+Accept: application/json
+Authorization: Token {{$global.token_B}}
+
+# test the response body
+{{
+  const {equal} = require('assert');
+  const article = response.parsedBody.article;
+  equal(article.favoritesCount, 1);
+  equal(article.favorited, true);
+}}

@@ -8,8 +8,8 @@ use realworld_axum_betashuttle::{
     },
     dao::Daos,
     endpoints::{
-        articles::handler::ArticleRouter, profiles::handler::ProfileRouter,
-        users::handler::UserRouter,
+        articles::ArticleRouter, favorites::FavoritesRouter, profiles::ProfileRouter,
+        users::UserRouter,
     },
     AppState,
 };
@@ -35,6 +35,7 @@ async fn main(
     let dyn_profiles_dao = Arc::new(daos.profiles) as DynProfilesDao;
     let dyn_articles_dao = Arc::new(daos.articles) as DynArticlesDao;
     let dyn_tags_dao = Arc::new(daos.tags) as DynTagsDao;
+    let dyn_favorite_dao = Arc::new(daos.favorites);
 
     let router = Router::new()
         .route("/", get(hello_world))
@@ -45,7 +46,22 @@ async fn main(
         )
         .nest(
             "/api",
-            ArticleRouter::new(dyn_articles_dao, dyn_users_dao, dyn_tags_dao).to_router(),
+            ArticleRouter::new(
+                dyn_articles_dao.clone(),
+                dyn_users_dao.clone(),
+                dyn_tags_dao.clone(),
+            )
+            .to_router(),
+        )
+        .nest(
+            "/api",
+            FavoritesRouter::new(
+                dyn_profiles_dao.clone(),
+                dyn_users_dao.clone(),
+                dyn_articles_dao.clone(),
+                dyn_favorite_dao.clone(),
+            )
+            .to_router(),
         )
         .layer(Extension(state));
 

@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
-use super::super::profiles::dto::Profile;
+use super::{super::profiles::dto::Profile, entity::ArticleEntity};
 
 #[derive(Debug, Clone, Validate, Deserialize, PartialEq)]
 pub struct NewArticle {
@@ -58,6 +58,28 @@ pub struct Article {
     #[serde(rename = "favoritesCount")]
     pub favorites_count: i32,
     pub author: Profile,
+}
+impl Article {
+    pub(crate) fn from_entity(
+        article: ArticleEntity,
+        profile: Profile,
+        is_favorite_current_user: bool,
+        favorites_count: i32,
+    ) -> Article {
+        Article {
+            id: article.id,
+            slug: article.slug,
+            title: article.title,
+            description: article.description,
+            body: article.body,
+            tag_list: vec![],
+            created_at: article.created_at.to_string(),
+            updated_at: article.updated_at.to_string(),
+            favorited: is_favorite_current_user,
+            favorites_count,
+            author: profile,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize)]

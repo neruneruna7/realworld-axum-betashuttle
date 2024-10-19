@@ -82,6 +82,29 @@ impl ProfilesDaoTrait for ProfileDao {
         .context("unexpected error: while deleting user_follow")?;
         Ok(user_follow)
     }
+
+    // あればSomeを返す
+    // 無ければNoneを返す
+    async fn is_follow(
+        &self,
+        follower_id: Uuid,
+        followee_id: Uuid,
+    ) -> ConduitResult<Option<UserFollowEntity>> {
+        let user_follow = sqlx::query_as!(
+            UserFollowEntity,
+            r#"
+            SELECT id, created_at, follower_id, followee_id
+            FROM user_follows
+            WHERE follower_id = $1 AND followee_id = $2
+            "#,
+            follower_id,
+            followee_id
+        )
+        .fetch_optional(&self.pool)
+        .await
+        .context("unexpected error: while fetching user_follow")?;
+        Ok(user_follow)
+    }
 }
 
 #[cfg(test)]
@@ -172,5 +195,41 @@ mod tests {
         assert_eq!(user_follows.len(), 1);
         assert_eq!(user_follows[0].follower_id, user_a.id);
         assert_eq!(user_follows[0].followee_id, user_b.id);
+    }
+
+    #[sqlx::test]
+    async fn test_is_follow(pool: PgPool) {
+        // テスト用のユーザーAとBを作成
+        let (user_a, user_b) = setup_user_ab(&pool).await;
+
+        // ユーザーAがユーザーBをフォローする
+        let profile_dao = ProfileDao::new(pool.clone());
+        let user_follow = profile_dao
+            .following_user(user_a.id, user_b.id)
+            .await
+            .unwrap();
+        assert_eq!(user_follow.follower_id, user_a.id);
+        assert_eq!(user_follow.followee_id, user_b.id);
+
+        // ユーザーAがユーザーBをフォローしているか確認
+        let user_follow = profile_dao
+            .is_follow(user_a.id, user_b.id)
+            .await
+            .unwrap()
+            .unwrap();
+        assert_eq!(user_follow.follower_id, user_a.id);
+        assert_eq!(user_follow.followee_id, user_b.id);
+    }
+
+    // フォローしていない場合
+    #[sqlx::test]
+    async fn test_is_not_follow(pool: PgPool) {
+        // テスト用のユーザーAとBを作成
+        let (user_a, user_b) = setup_user_ab(&pool).await;
+
+        // ユーザーAがユーザーBをフォローしていないか確認
+        let profile_dao = ProfileDao::new(pool.clone());
+        let user_follow = profile_dao.is_follow(user_a.id, user_b.id).await.unwrap();
+        assert_eq!(user_follow, None);
     }
 }
