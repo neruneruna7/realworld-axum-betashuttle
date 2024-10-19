@@ -13,6 +13,10 @@ pub type DynFavoritesDao = Arc<dyn FavoritesDaoTrait + Send + Sync>;
 #[async_trait]
 pub trait FavoritesDaoTrait {
     async fn add_favorite(&self, user_id: Uuid, article_id: i32) -> ConduitResult<FavoritesEntity>;
+    async fn get_favorites_by_article_id(
+        &self,
+        article_id: i32,
+    ) -> ConduitResult<Vec<FavoritesEntity>>;
     async fn remove_favorite(
         &self,
         user_id: Uuid,

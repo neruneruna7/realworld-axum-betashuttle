@@ -43,6 +43,26 @@ impl FavoritesDaoTrait for FavoriteDao {
         Ok(favorite)
     }
 
+    async fn get_favorites_by_article_id(
+        &self,
+        article_id: i32,
+    ) -> ConduitResult<Vec<FavoritesEntity>> {
+        // 論理削除フラグが立っていないものを取得
+        let favorites = sqlx::query_as!(
+            FavoritesEntity,
+            r#"
+            SELECT * FROM favorites
+            WHERE article_id = $1 AND is_deleted = false
+            "#,
+            article_id
+        )
+        .fetch_all(&self.pool)
+        .await
+        .context("Failed to get favorites by article id")?;
+
+        Ok(favorites)
+    }
+
     async fn remove_favorite(
         &self,
         user_id: Uuid,
