@@ -13,6 +13,7 @@ pub struct Daos {
     pub profiles: profiles::ProfileDao,
     pub articles: articles::ArticlesDao,
     pub tags: tags::TagsDao,
+    pub favorites: favorites::FavoriteDao,
 }
 
 impl Daos {
@@ -21,11 +22,13 @@ impl Daos {
         let profiles = profiles::ProfileDao::new(pool.clone());
         let articles = articles::ArticlesDao::new(pool.clone());
         let tags = tags::TagsDao::new(pool.clone());
+        let favorites = favorites::FavoriteDao::new(pool.clone());
         Self {
             users,
             profiles,
             articles,
             tags,
+            favorites,
         }
     }
 }
