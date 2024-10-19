@@ -1,25 +1,15 @@
-use std::collections::HashMap;
-
-use axum::{
-    extract::Path,
-    http::StatusCode,
-    routing::{get, post},
-    Extension, Json, Router,
-};
+use axum::{extract::Path, http::StatusCode, routing::post, Extension, Json, Router};
 use tracing::info;
 
 use crate::{
     core::{
         articles::{dao_trait::DynArticlesDao, dto::Article},
         favorites::{dao_trait::DynFavoritesDao, dto::AddFavoriteRes},
-        profiles::{
-            dao_trait::DynProfilesDao,
-            dto::{Profile, ProfileRes},
-        },
+        profiles::{dao_trait::DynProfilesDao, dto::Profile},
         users::dao_trait::DynUsersDao,
     },
     error::{ConduitError, ConduitResult},
-    extractor::{OptionalAuth, RequiredAuth},
+    extractor::RequiredAuth,
 };
 
 pub struct FavoritesRouter {
@@ -82,15 +72,18 @@ impl FavoritesRouter {
         // current_userが記事をいいねしているかどうかを探す
         let is_favorite_current_user = favorites
             .iter()
-            .find(|favorite| favorite.user_id == current_user_id)
-            .is_some();
+            .any(|favorite| favorite.user_id == current_user_id);
 
         info!("favorite added");
         // 記事を書いたユーザーを取得
         let author = user_dao.get_user_by_id(article.author_id).await?;
         // フォローしているかどうかを取得
         let following = profile_dao.is_follow(current_user_id, author.id).await?;
-        let following = if let Some(u) = following { true } else { false };
+        let following = if let Some(_u) = following {
+            true
+        } else {
+            false
+        };
         // Profileを作成
         let profile = Profile::from_user_entity(author, following);
         // Articleを作成
