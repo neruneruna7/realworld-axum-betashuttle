@@ -8,8 +8,8 @@ use realworld_axum_betashuttle::{
     },
     dao::Daos,
     endpoints::{
-        articles::handler::ArticleRouter, favorites::FavoritesRouter,
-        profiles::handler::ProfileRouter, users::handler::UserRouter,
+        articles::ArticleRouter, favorites::FavoritesRouter, profiles::ProfileRouter,
+        users::UserRouter,
     },
     AppState,
 };
