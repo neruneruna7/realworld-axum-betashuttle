@@ -6,3 +6,8 @@ use crate::core::articles::dto::Article;
 pub struct AddFavoriteRes {
     pub article: Article,
 }
+
+#[derive(Debug, Clone, Serialize)]
+pub struct DeleteFavoriteRes {
+    pub article: Article,
+}

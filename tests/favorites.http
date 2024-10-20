@@ -99,3 +99,16 @@ Authorization: Token {{$global.token_B}}
   equal(article.favoritesCount, 1);
   equal(article.favorited, true);
 }}
+
+### B user がA userの記事をお気に入り解除
+DELETE /articles/{{$global.slug}}/favorite
+Accept: application/json
+Authorization: Token {{$global.token_B}}
+
+# test the response body
+{{
+  const {equal} = require('assert');
+  const article = response.parsedBody.article;
+  equal(article.favoritesCount, 0);
+  equal(article.favorited, false);
+}}
