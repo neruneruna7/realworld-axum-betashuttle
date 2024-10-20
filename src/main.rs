@@ -50,6 +50,7 @@ async fn main(
                 dyn_articles_dao.clone(),
                 dyn_users_dao.clone(),
                 dyn_tags_dao.clone(),
+                dyn_favorite_dao.clone(),
             )
             .to_router(),
         )
