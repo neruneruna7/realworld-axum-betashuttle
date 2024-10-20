@@ -2,10 +2,15 @@
 # マイグレーションファイルが3つあるので3回revertしてからrunする
 description = "Reset data the database"
 script = """
-sqlx mig revert
-sqlx mig revert
-sqlx mig revert
-sqlx mig revert
+# migrationsフォルダ内にある，down.sqlの数だけrevertしてからrunする
+# forで制御する
+# migrartoinsフォルダ内にある，down.sqlの数を取得
+down_sql_count=$(ls migrations/*.down.sql | wc -l)
+for i in $(seq 1 $down_sql_count); do
+    sqlx mig revert
+    echo "revert $i"
+done
+
 sqlx mig run
 """
 
