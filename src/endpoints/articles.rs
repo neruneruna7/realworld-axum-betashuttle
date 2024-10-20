@@ -16,6 +16,7 @@ use crate::{
                 UpdateArticleRes,
             },
         },
+        favorites::dao_trait::DynFavoritesDao,
         profiles::dto::Profile,
         tags::dao_trait::DynTagsDao,
         users::dao_trait::DynUsersDao,
@@ -28,14 +29,21 @@ pub struct ArticleRouter {
     article_dao: DynArticlesDao,
     user_dao: DynUsersDao,
     tag_dao: DynTagsDao,
+    favorite_dao: DynFavoritesDao,
 }
 
 impl ArticleRouter {
-    pub fn new(article_dao: DynArticlesDao, user_dao: DynUsersDao, tag_dao: DynTagsDao) -> Self {
+    pub fn new(
+        article_dao: DynArticlesDao,
+        user_dao: DynUsersDao,
+        tag_dao: DynTagsDao,
+        favorite_dao: DynFavoritesDao,
+    ) -> Self {
         Self {
             article_dao,
             user_dao,
             tag_dao,
+            favorite_dao,
         }
     }
 
@@ -51,6 +59,7 @@ impl ArticleRouter {
             .layer(Extension(self.article_dao.clone()))
             .layer(Extension(self.user_dao.clone()))
             .layer(Extension(self.tag_dao.clone()))
+            .layer(Extension(self.favorite_dao.clone()))
     }
 
     #[tracing::instrument(skip_all)]
@@ -121,12 +130,13 @@ impl ArticleRouter {
         Ok((StatusCode::CREATED, Json(CreateArticleRes { article })))
     }
 
-    #[tracing::instrument(skip(user_dao, article_dao, tag_dao))]
+    #[tracing::instrument(skip(user_dao, article_dao, tag_dao, favorite_dao))]
     pub async fn get_article(
         Path(slug): Path<String>,
         Extension(user_dao): Extension<DynUsersDao>,
         Extension(article_dao): Extension<DynArticlesDao>,
         Extension(tag_dao): Extension<DynTagsDao>,
+        Extension(favorite_dao): Extension<DynFavoritesDao>,
     ) -> ConduitResult<(StatusCode, Json<GetArticleRes>)> {
         info!("retrieving article");
         let article = article_dao.get_article_by_slug(&slug).await?;
@@ -139,6 +149,14 @@ impl ArticleRouter {
         // タグを取得
         let tags = tag_dao.get_article_tags(exists_article.id).await?;
         let tag_list = tags.iter().map(|tag| tag.tag.clone()).collect::<Vec<_>>();
+
+        // いいね数を取得
+        let favorites = favorite_dao
+            .get_favorites_by_article_id(exists_article.id)
+            .await?;
+        let favorites_count = favorites.len() as i32;
+        // いいねしているかどうかは未実装
+        // OptionalAuthが必要なのでは? 仕様にないから実装してないが．
 
         // 記事の作者を取得
         let user_entity = user_dao.get_user_by_id(exists_article.author_id).await?;
@@ -159,20 +177,21 @@ impl ArticleRouter {
             created_at: exists_article.created_at.to_string(),
             updated_at: exists_article.updated_at.to_string(),
             favorited: false,
-            favorites_count: 0,
+            favorites_count: favorites_count,
             author,
         };
 
         Ok((StatusCode::OK, Json(GetArticleRes { article })))
     }
 
-    #[tracing::instrument(skip(user_dao, article_dao, tag_dao, req))]
+    #[tracing::instrument(skip(user_dao, article_dao, tag_dao, req, favorite_dao))]
     async fn update_article(
         Path(slug): Path<String>,
         RequiredAuth(user_id): RequiredAuth,
         Extension(user_dao): Extension<DynUsersDao>,
         Extension(article_dao): Extension<DynArticlesDao>,
         Extension(tag_dao): Extension<DynTagsDao>,
+        Extension(favorite_dao): Extension<DynFavoritesDao>,
         ValidationExtractor(req): ValidationExtractor<UpdateArticleReq>,
     ) -> ConduitResult<(StatusCode, Json<UpdateArticleRes>)> {
         info!("retrieving article to update");
@@ -210,6 +229,12 @@ impl ArticleRouter {
         let tags = tag_dao.get_article_tags(updated_article.id).await?;
         let tag_list = tags.iter().map(|tag| tag.tag.clone()).collect::<Vec<_>>();
 
+        // 記事のいいね数を取得
+        let favorites = favorite_dao
+            .get_favorites_by_article_id(updated_article.id)
+            .await?;
+        let favorites_count = favorites.len() as i32;
+
         // 記事の作者を取得
         let user_entity = user_dao.get_user_by_id(updated_article.author_id).await?;
         let author = Profile {
@@ -229,7 +254,7 @@ impl ArticleRouter {
             created_at: updated_article.created_at.to_string(),
             updated_at: updated_article.updated_at.to_string(),
             favorited: false,
-            favorites_count: 0,
+            favorites_count: favorites_count,
             author,
         };
 
