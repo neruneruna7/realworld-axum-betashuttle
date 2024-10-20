@@ -177,7 +177,7 @@ impl ArticleRouter {
             created_at: exists_article.created_at.to_string(),
             updated_at: exists_article.updated_at.to_string(),
             favorited: false,
-            favorites_count: favorites_count,
+            favorites_count,
             author,
         };
 
@@ -254,7 +254,7 @@ impl ArticleRouter {
             created_at: updated_article.created_at.to_string(),
             updated_at: updated_article.updated_at.to_string(),
             favorited: false,
-            favorites_count: favorites_count,
+            favorites_count,
             author,
         };
 
